@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "backend",
+    "frontend",
+    "common",
+]
+default-members = [ "backend" ] # used for `cargo build`
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Qwox"]
+
+[workspace.dependencies]
+anyhow = "1.0.68"
+serde = { version = "1.0.152", features = ["derive"] }
