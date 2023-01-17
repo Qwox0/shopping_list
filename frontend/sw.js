@@ -1,8 +1,12 @@
 const cacheName = "shoppingListPWA-v1";
 
 const contentToCache = [
-    "/",
     /*
+    "/",
+    "/assets/bin.webp",
+    "/assets/pen.webp",
+    "/language/en.toml",
+    "/language/de.toml",
     "/icons/icon-1024.png",
     "/icons/icon-120.png",
     "/icons/icon-128.png",
@@ -21,7 +25,6 @@ const contentToCache = [
 
     /*
     "/style.scss",
-    "/assets",
 
     "/public/favicon.ico",
     */

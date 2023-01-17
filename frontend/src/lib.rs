@@ -1,7 +1,33 @@
-use leptos::*;
+mod connection_status;
+mod language;
+mod list;
 
-pub mod connection_status;
-pub mod list;
+use connection_status::*;
+use language::*;
+use leptos::*;
+use list::*;
+
+#[component]
+pub fn App(cx: Scope) -> impl IntoView {
+    let (lang, set_lang) = create_signal(cx, Language::English);
+    let lang = create_local_resource(cx, lang, |lang| Dictionary::fetch(lang));
+    // provide language text to all components (use init_dict!() and dict!())
+    provide_context(cx, LangReader(lang));
+
+    view! {
+        cx,
+        <header>
+            <LanguageSelector set_lang/>
+            <ConnectionStatus/>
+        </header>
+        <main>
+            //<h1> "Shopping List" </h1>
+            <h1> <span lang="en">"Shopping List"</span>  </h1>
+            //<h1> <span lang="de">"Einkaufsliste"</span>  </h1>
+            <ShoppingList/>
+        </main>
+    }
+}
 
 /*
 /// A simple counter component.

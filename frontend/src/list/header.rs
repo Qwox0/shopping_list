@@ -4,25 +4,30 @@ use crate::list::{item::Item, EntriesList};
 
 #[component]
 pub fn ListHeader(cx: Scope) -> impl IntoView {
-    let set_list = use_context::<WriteSignal<EntriesList>>(cx).unwrap();
+    let (new_item_name, set_new_item_name) = create_signal(cx, "".to_string());
+    let (new_item_amount, set_new_item_amount) = create_signal(cx, 0);
 
+    let set_list = use_context::<WriteSignal<EntriesList>>(cx).unwrap();
     view! {
         cx,
         <header>
-            <input class="new-item-name"
-                on:focusout=move |e| set_list.update(|list| list.add(Item::new(cx, event_target_value(&e))))
+            <input
+                type="text"
+                placeholder="Item Name"
+                class="new-item-name"
+                on:focusout=move |e| set_new_item_name(event_target_value(&e))
+            />
+            <input
+                type="number"
+                placeholder="Amount"
+                class="new-item-amount"
+                on:focusout=move |e| set_new_item_amount(event_target_value(&e).parse().unwrap_or(1))
+            />
+            <input value="+"
+                type="button"
+                class="new-item-button"
+                on:click=move |_| set_list.update(|list| list.add(Item::new(cx, new_item_name(), new_item_amount())))
             />
         </header>
     }
-}
-
-fn handle_keydown<T>(event: web_sys::KeyboardEvent, ws: WriteSignal<T>) {
-    let target = event_target::<web_sys::HtmlInputElement>(&event);
-    event.stop_propagation();
-    let key_code = event.key_code();
-    let key = event.key();
-    let title = event_target_value(&event);
-    log!("key_code: {:?}, ", key_code);
-    log!("key: {:?}, ", key);
-    log!("target_value: {:?}, ", title);
 }

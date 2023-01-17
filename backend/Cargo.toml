@@ -9,6 +9,10 @@ edition = "2021"
 actix-files = "0.6.2"
 actix-web = { version = "4.2.1", features = ["openssl"] }
 anyhow.workspace = true
+display_macro.workspace = true
 openssl = "0.10.45"
+reqwasm.workspace = true
 serde.workspace = true
+thiserror.workspace = true
+toml.workspace = true
 

@@ -1,5 +1,5 @@
 use actix_files::Files;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
@@ -22,6 +22,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
+            .wrap(middleware::Compress::default())
             .service(hello)
             .service(echo)
             .service(Files::new("/", "./dist/").index_file("index.html"))
@@ -31,6 +32,7 @@ async fn main() -> std::io::Result<()> {
                 web::to(|| HttpResponse::NotFound()),
             )
     })
+    .bind("127.0.0.1:8080")?
     .bind_openssl(SOCKET_ADDRESS, ssl_builder)?
     .run()
     .await

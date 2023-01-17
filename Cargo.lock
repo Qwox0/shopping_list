@@ -307,8 +307,12 @@ dependencies = [
  "actix-files",
  "actix-web",
  "anyhow",
+ "display_macro",
  "openssl",
+ "reqwasm",
  "serde",
+ "thiserror",
+ "toml",
 ]
 
 [[package]]
@@ -543,6 +547,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "display_macro"
+version = "0.1.0"
+dependencies = [
+ "display_macro-impl",
+]
+
+[[package]]
+name = "display_macro-impl"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "dlv-list"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -645,10 +665,15 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "common",
  "console_error_panic_hook",
+ "display_macro",
  "leptos",
+ "reqwasm",
  "serde",
+ "thiserror",
+ "toml",
  "uuid",
  "web-sys",
 ]
@@ -803,7 +828,7 @@ dependencies = [
  "gloo-events",
  "gloo-file",
  "gloo-history",
- "gloo-net",
+ "gloo-net 0.2.5",
  "gloo-render",
  "gloo-storage",
  "gloo-timers",
@@ -870,6 +895,26 @@ dependencies = [
  "serde_urlencoded",
  "thiserror",
  "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "gloo-net"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2899cb1a13be9020b010967adc6b2a8a343b6f1428b90238c9d53ca24decc6db"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "futures-sink",
+ "gloo-utils",
+ "js-sys",
+ "pin-project",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
 ]
 
@@ -1237,7 +1282,7 @@ checksum = "4d32e80a9ff3609086644528709db7eaabcb4724934ce3d24e75b36d2542ca18"
 dependencies = [
  "ciborium",
  "form_urlencoded",
- "gloo-net",
+ "gloo-net 0.2.5",
  "lazy_static",
  "leptos_dom",
  "leptos_reactive",
@@ -1704,6 +1749,15 @@ name = "regex-syntax"
 version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
+
+[[package]]
+name = "reqwasm"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05b89870d729c501fa7a68c43bf4d938bbb3a8c156d333d90faa0e8b3e3212fb"
+dependencies = [
+ "gloo-net 0.1.0",
+]
 
 [[package]]
 name = "rmp"
@@ -2190,6 +2244,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eaf9f5aceeec8be17c128b2e93e031fb8a4d469bb9c4ae2d7dc1888b26887268"
 dependencies = [
  "cfg-if",
+ "serde",
+ "serde_json",
  "wasm-bindgen-macro",
 ]
 
