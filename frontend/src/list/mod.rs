@@ -1,13 +1,10 @@
 use leptos::*;
 
-mod item;
 mod header;
+mod item;
 
-use item::*;
 use header::*;
-
-use crate::language::init_dict;
-
+use item::*;
 
 #[derive(Debug, Clone)]
 struct EntriesList(Vec<Item>);
@@ -24,19 +21,19 @@ impl EntriesList {
 
 #[component]
 pub fn ShoppingList(cx: Scope) -> impl IntoView {
-    let lang = init_dict!(cx);
     let (list, set_list) = create_signal(cx, EntriesList::new());
-
 
     provide_context(cx, set_list);
 
-    let items = move || view! { cx,
-        <For each=move || list.get().0.clone()
-            key=|item| item.id
-            view=move |item| view! { cx,
-                <Item item/>
-            }
-        />
+    let items = move || {
+        view! { cx,
+            <For each=move || list.get().0.clone()
+                key=|item| item.id
+                view=move |item| view! { cx,
+                    <Item item/>
+                }
+            />
+        }
     };
 
     view! {cx,
@@ -45,13 +42,14 @@ pub fn ShoppingList(cx: Scope) -> impl IntoView {
             <ul>
                 {items}
             </ul>
+
+            <input type="button"
+                value="Debug"
+                on:click=move |_| {
+                    log!("{:?}", list().0.iter().map(|i| format!("{}", i)).collect::<Vec<_>>());
+                }
+            />
         </section>
-        <input type="button"
-            value="Debug"
-            on:click=move |_| {
-                log!("{:?}", list().0.iter().map(|i| format!("{}", i)).collect::<Vec<_>>());
-            }
-        />
     }
 }
 

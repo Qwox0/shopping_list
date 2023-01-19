@@ -1,6 +1,9 @@
 use leptos::*;
 
-use crate::list::{item::Item, EntriesList};
+use crate::{
+    language::text_macro::text,
+    list::{item::Item, EntriesList},
+};
 
 #[component]
 pub fn ListHeader(cx: Scope) -> impl IntoView {
@@ -13,13 +16,13 @@ pub fn ListHeader(cx: Scope) -> impl IntoView {
         <header>
             <input
                 type="text"
-                placeholder="Item Name"
+                placeholder={text!(cx, |d| &d.list_header.item_name)}
                 class="new-item-name"
                 on:focusout=move |e| set_new_item_name(event_target_value(&e))
             />
             <input
                 type="number"
-                placeholder="Amount"
+                placeholder={text!(cx, |d| &d.list_header.amount)}
                 class="new-item-amount"
                 on:focusout=move |e| set_new_item_amount(event_target_value(&e).parse().unwrap_or(1))
             />

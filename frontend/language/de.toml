@@ -1,2 +1,9 @@
 shopping_list="Einkaufsliste"
-delete="Löschen"
+
+[list_header]
+item_name="Name"
+amount="Anzahl"
+
+[item]
+edit="Bearbeiten"
+remove="Entfernen"

@@ -1,9 +1,10 @@
+pub mod dictionary;
 mod error;
 pub mod text;
 
-use anyhow::Context;
+use self::dictionary::Dictionary;
+use self::text_macro::text;
 use leptos::*;
-use serde::Deserialize;
 use std::hash::Hash;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -13,24 +14,110 @@ pub enum Language {
 }
 
 impl Language {
-    pub const fn short<'a>(&'a self) -> &'a str {
+    pub fn short(&self) -> String {
         match self {
             Language::English => "en",
             Language::German => "de",
         }
+        .to_owned()
     }
 }
 
 #[derive(Clone)]
-pub struct LangReader(pub Resource<Language, Dictionary>);
+pub struct LangReader {
+    pub language: RwSignal<Language>,
+    pub dictionary: Resource<Language, Dictionary>,
+}
 
+impl LangReader {
+    pub fn new(cx: Scope) -> Self {
+        let language = create_rw_signal(cx, Language::English);
+        LangReader {
+            language,
+            dictionary: create_local_resource(cx, language, |lang| Dictionary::fetch(lang)),
+        }
+    }
+}
+
+/// prevent multiple definitions of text
+pub(crate) mod text_macro {
+    /// get Text in the currently selected language
+    /// For displaying text inside the [view] macro, use the [Text] component instead!
+    ///
+    /// Parameters:
+    /// cx: Scope
+    /// getter: Fn(&[Dictionary]) -> &T,
+    macro_rules! text {
+        ( $cx:ident, $getter:expr) => {{
+            #[inline(always)]
+            fn type_hint<T, F>(dict: &crate::language::dictionary::Dictionary, getter: F) -> T
+            where
+                F: Fn(&crate::language::dictionary::Dictionary) -> &T,
+                T: Clone,
+            {
+                getter(dict).clone()
+            }
+
+            move || {
+                format!(
+                    "{}",
+                    use_context::<crate::language::LangReader>($cx)
+                        .expect("`LangReader` context is available")
+                        .dictionary
+                        .with(|dict: &crate::language::dictionary::Dictionary| type_hint(
+                            dict, $getter
+                        ))
+                        .unwrap_or(type_hint(
+                            &crate::language::dictionary::Dictionary::pending(),
+                            $getter
+                        ))
+                )
+            }
+        }};
+    }
+    pub(crate) use text;
+}
+
+/// write Text in the currently selected language
+#[component]
+pub fn Text<F, T>(cx: Scope, getter: F) -> impl IntoView
+where
+    F: Fn(&Dictionary) -> &T + Copy + 'static,
+    T: std::fmt::Display + Clone,
+{
+    let language = use_context::<crate::language::LangReader>(cx)
+        .expect("`LangReader` context is available")
+        .language;
+    view! { cx,
+        <span lang={move || language.with(|l| l.short())}>
+            { text!(cx, getter) }
+        </span>
+    }
+}
+
+#[component]
+pub fn LanguageSelector(cx: Scope, set_lang: WriteSignal<Language>) -> impl IntoView {
+    view! {cx,
+        <a href="#"
+            //on:click=move |_| set_lang.update(|lm| lm.change_language(Language::English).expect("able to change language"))
+            //on:click=move |_| set_langs.update(|lm| lm.current_language = Language::English)
+            on:click=move |_| set_lang(Language::English)
+        >"English"</a>
+        <a href="#"
+            on:click=move |_| set_lang(Language::German)
+        >"Deutsch"</a>
+    }
+}
+
+/* -------------------------------------------------------------------------------------------------------------------------
+* replaced with Text component!
 /// Init multilanguage support with `let lang = init_dict!(cx);`.
 /// use Dictionary in `view!()` with `{ dict!(lang, |d| d.<some_text_block>.clone()) }`.
 macro_rules! init_dict {
     ($cx:ident) => {{
         use_context::<crate::language::LangReader>($cx)
             .expect("`LangReader` context is available")
-            .0
+            .dictionary
     }};
 }
 pub(crate) use init_dict;
@@ -41,9 +128,9 @@ pub(crate) use init_dict;
 macro_rules! dict {
     ( $lang_reader:ident, $getter:expr) => {{
         #[inline(always)]
-        fn type_hint<T, F>(dict: &crate::language::Dictionary, getter: F) -> T
+        fn type_hint<T, F>(dict: &crate::language::dictionary::Dictionary, getter: F) -> T
         where
-            F: Fn(&crate::language::Dictionary) -> &T,
+            F: Fn(&crate::language::dictionary::Dictionary) -> &T,
             T: Clone,
         {
             getter(dict).clone()
@@ -53,8 +140,8 @@ macro_rules! dict {
             format!(
                 "{}",
                 $lang_reader
-                    .with(|dict: &crate::language::Dictionary| type_hint(dict, $getter))
-                    .unwrap_or(type_hint(&crate::language::Dictionary::pending(), $getter))
+                    .with(|dict: &crate::language::dictionary::Dictionary| type_hint(dict, $getter))
+                    .unwrap_or(type_hint(&crate::language::dictionary::Dictionary::pending(), $getter))
             )
         }
         //.unwrap_or(Default::default()))
@@ -62,77 +149,7 @@ macro_rules! dict {
 }
 
 pub(crate) use dict;
-
-#[component]
-pub fn LanguageSelector(cx: Scope, set_lang: WriteSignal<Language>) -> impl IntoView {
-    let lang = init_dict!(cx);
-    view! {cx,
-        <a href="#"
-            //on:click=move |_| set_lang.update(|lm| lm.change_language(Language::English).expect("able to change language"))
-            //on:click=move |_| set_langs.update(|lm| lm.current_language = Language::English)
-            on:click=move |_| set_lang(Language::English)
-        >"English"</a>
-        <a href="#"
-            on:click=move |_| set_lang(Language::German)
-        >"Deutsch"</a>
-            {dict!(lang, |d| &d.shopping_list)}
-    }
-}
-
-trait HasPendingValue {
-    fn get_pending_value() -> Self;
-}
-
-macro_rules! init_pending_value {
-    ($type:ty, $pending_value:expr) => {
-        impl HasPendingValue for $type {
-            fn get_pending_value() -> Self {
-                $pending_value
-            }
-        }
-    };
-}
-
-init_pending_value!(String, "pending ...".to_string());
-init_pending_value!(i32, 0);
-
-macro_rules! init_dictionary_struct {
-    ( $( $name:ident: $attr_type:ty ),* ) => {
-        #[derive(Deserialize, Eq, Hash, Debug, PartialEq, Clone)]
-        pub struct Dictionary {
-            $(pub $name: $attr_type),*
-        }
-
-        impl Dictionary {
-            pub fn pending() -> Self {
-                Dictionary {
-                    $($name: <$attr_type>::get_pending_value()),*
-                }
-            }
-        }
-    };
-}
-
-init_dictionary_struct!(shopping_list: String, delete: String);
-
-impl Dictionary {
-    pub async fn fetch(lang: Language) -> Self {
-        log!("fetch Language: {:?}", lang);
-        async {
-            let path = format!("/language/{}.toml", lang.short());
-            let content = reqwasm::http::Request::get(&path)
-                .send()
-                .await
-                .with_context(|| format!("Failed to Request: {:?}", path))?
-                .text()
-                .await
-                .context("Failed to get context")?;
-            toml::from_str::<Dictionary>(&content).context("Failed to parse text")
-        }
-        .await
-        .expect("no lang fetch error")
-    }
-}
+*/
 
 /* -------------------------------------------------------------------------------------------------------------------------
 /// idea: cache already loaded Dictionaries in a HashMap

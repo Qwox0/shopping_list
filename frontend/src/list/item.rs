@@ -2,7 +2,7 @@ use display_macro::display;
 use leptos::*;
 use uuid::Uuid;
 
-use crate::language::{init_dict, dict};
+use crate::language::text_macro::text;
 
 /// replace with sections?
 #[allow(unused)]
@@ -61,8 +61,6 @@ impl Item {
 
 #[component]
 pub fn Item(cx: Scope, item: Item) -> impl IntoView {
-    let lang = init_dict!(cx);
-
     let delete = move |e| {
         let do_remove = window()
             .confirm_with_message(&format!("Do you want to remove {:?}?", item.name.get()))
@@ -84,12 +82,12 @@ pub fn Item(cx: Scope, item: Item) -> impl IntoView {
             </div>
             <div class="buttons">
                 <input type="image"
-                    alt="Edit"
+                    alt={text!(cx, |d| &d.item.edit)}
                     src="/assets/pen.webp"
                     on:click=move |e| {}
                     />
                 <input type="image"
-                    alt={dict!(lang, |d| &d.delete)}
+                    alt={text!(cx, |d| &d.item.remove)}
                     src="/assets/bin.webp"
                     on:click=delete
                 />
