@@ -1,5 +1,5 @@
-target
-dist
-perf.data*
+/target/
+pkg
+**/*.rs.bk
 *.pem
 
