@@ -1,62 +1,11 @@
-use display_macro::display;
 use leptos::*;
-use uuid::Uuid;
+use common::item::Item;
 
 use crate::language::text_macro::text;
 
-/// replace with sections?
-#[allow(unused)]
-#[derive(Debug, Clone)]
-pub enum State {
-    Needed,
-    Completed,
-}
-
-impl State {
-    pub fn is_done(&self) -> bool {
-        match self {
-            State::Completed => true,
-            _ => false,
-        }
-    }
-
-    pub fn as_attribute(&self) -> String {
-        match self {
-            State::Completed => "completed",
-            State::Needed => "needed",
-        }
-        .to_string()
-    }
-}
-
-impl From<bool> for State {
-    fn from(value: bool) -> Self {
-        if value {
-            State::Completed
-        } else {
-            State::Needed
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-#[display("{} x{}", name.get(), amount.get())]
-pub struct Item {
-    pub id: Uuid,
-    pub name: RwSignal<String>,
-    pub amount: RwSignal<usize>,
-    pub state: RwSignal<State>,
-}
-
-impl Item {
-    pub fn new(cx: Scope, name: impl Into<String>, amount: usize) -> Self {
-        Item {
-            id: Uuid::new_v4(),
-            name: create_rw_signal(cx, name.into()),
-            amount: create_rw_signal(cx, amount),
-            state: create_rw_signal(cx, State::Needed),
-        }
-    }
+#[server(TestServerFn)]
+pub async fn test() -> Result<(), ServerFnError> {
+    Ok(())
 }
 
 #[component]
@@ -74,7 +23,7 @@ pub fn Item(cx: Scope, item: Item) -> impl IntoView {
     view! { cx,
         <li state={move || item.state.get().as_attribute()} >
             <input type="checkbox"
-                checked={move || item.state.get().is_done()}
+                checked={move || item.state.is_done()}
                 on:change=move |e| item.state.set(event_target_checked(&e).into())
             />
             <div class="text">

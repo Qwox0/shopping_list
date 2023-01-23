@@ -10,10 +10,11 @@ anyhow.workspace = true
 common = { version = "0.1.0", path = "../common" }
 console_error_panic_hook = "0.1.7"
 leptos = "0.1.0"
-uuid = { version = "1.2.2", features = ["serde", "js", "v4"] }
-web-sys = { version = "0.3.60", features = ["Navigator"] }
+uuid.workspace = true
+web-sys = { version = "0.3.60", features = ["Navigator", "Storage", "Window"] }
 serde.workspace = true
+serde_json.workspace = true
 reqwasm.workspace = true
 thiserror.workspace = true
-display_macro.workspace = true
+display_me.workspace = true
 toml.workspace = true

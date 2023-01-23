@@ -1,3 +1,4 @@
+use common::item::Item;
 use leptos::*;
 
 mod header;
@@ -5,6 +6,8 @@ mod item;
 
 use header::*;
 use item::*;
+
+use crate::state::ItemList;
 
 #[derive(Debug, Clone)]
 struct EntriesList(Vec<Item>);
@@ -21,13 +24,13 @@ impl EntriesList {
 
 #[component]
 pub fn ShoppingList(cx: Scope) -> impl IntoView {
-    let (list, set_list) = create_signal(cx, EntriesList::new());
-
-    provide_context(cx, set_list);
+    //let list = create_resource(cx, move || 0, |_| get_items());
+    //provide_context(cx, set_list);
+    let (list, set_list) = create_signal(cx, ItemList::new());
 
     let items = move || {
         view! { cx,
-            <For each=move || list.get().0.clone()
+            <For each=move || list.with(|l| l.items)
                 key=|item| item.id
                 view=move |item| view! { cx,
                     <Item item/>

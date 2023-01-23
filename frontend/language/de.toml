@@ -2,7 +2,7 @@ shopping_list="Einkaufsliste"
 
 [list_header]
 item_name="Name"
-amount="Anzahl"
+amount="Anzahl (Standard: 1)"
 
 [item]
 edit="Bearbeiten"

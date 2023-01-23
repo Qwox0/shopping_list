@@ -1,16 +1,37 @@
 pub mod dictionary;
-mod error;
-pub mod text;
 
 use self::dictionary::Dictionary;
 use self::text_macro::text;
 use leptos::*;
+use std::fmt::Display;
 use std::hash::Hash;
+
+const LANGUAGES: [Language; 2] = [Language::English, Language::German];
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum Language {
     English,
     German,
+}
+
+impl Display for Language {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Language::English => write!(f, "English"),
+            Language::German => write!(f, "Deutsch"),
+        }
+    }
+}
+impl TryFrom<String> for Language {
+    type Error = String;
+
+    fn try_from(str: String) -> Result<Self, Self::Error> {
+        match str.as_str() {
+            "English" => Ok(Language::English),
+            "Deutsch" => Ok(Language::German),
+            _ => Err(str),
+        }
+    }
 }
 
 impl Language {
@@ -53,7 +74,7 @@ pub(crate) mod text_macro {
             fn type_hint<T, F>(dict: &crate::language::dictionary::Dictionary, getter: F) -> T
             where
                 F: Fn(&crate::language::dictionary::Dictionary) -> &T,
-                T: Clone,
+                T: std::fmt::Display + Clone + std::default::Default,
             {
                 getter(dict).clone()
             }
@@ -67,10 +88,13 @@ pub(crate) mod text_macro {
                         .with(|dict: &crate::language::dictionary::Dictionary| type_hint(
                             dict, $getter
                         ))
-                        .unwrap_or(type_hint(
-                            &crate::language::dictionary::Dictionary::pending(),
+                        .unwrap_or_default()
+                        /*
+                        (type_hint(
+                            &crate::language::dictionary::Dictionary::default(),
                             $getter
                         ))
+                        */
                 )
             }
         }};
@@ -83,7 +107,7 @@ pub(crate) mod text_macro {
 pub fn Text<F, T>(cx: Scope, getter: F) -> impl IntoView
 where
     F: Fn(&Dictionary) -> &T + Copy + 'static,
-    T: std::fmt::Display + Clone,
+    T: std::fmt::Display + Clone + std::default::Default,
 {
     let language = use_context::<crate::language::LangReader>(cx)
         .expect("`LangReader` context is available")
@@ -97,15 +121,21 @@ where
 
 #[component]
 pub fn LanguageSelector(cx: Scope, set_lang: WriteSignal<Language>) -> impl IntoView {
+    let options: Vec<_> = LANGUAGES
+        .iter()
+        .map(|a| {
+            view! {cx,
+                <option>{a.to_string()}</option>
+            }
+        })
+        .collect();
+
     view! {cx,
-        <a href="#"
-            //on:click=move |_| set_lang.update(|lm| lm.change_language(Language::English).expect("able to change language"))
-            //on:click=move |_| set_langs.update(|lm| lm.current_language = Language::English)
-            on:click=move |_| set_lang(Language::English)
-        >"English"</a>
-        <a href="#"
-            on:click=move |_| set_lang(Language::German)
-        >"Deutsch"</a>
+        <select
+            on:change=move |e| set_lang(Language::try_from(event_target_value(&e)).expect("valid language String"))
+        >
+            {options}
+        </select>
     }
 }
 

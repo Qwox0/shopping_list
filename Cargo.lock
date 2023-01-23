@@ -307,7 +307,7 @@ dependencies = [
  "actix-files",
  "actix-web",
  "anyhow",
- "display_macro",
+ "display_me",
  "openssl",
  "reqwasm",
  "serde",
@@ -448,6 +448,11 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.1.0"
+dependencies = [
+ "display_me",
+ "serde",
+ "uuid",
+]
 
 [[package]]
 name = "config"
@@ -547,14 +552,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "display_macro"
+name = "display_me"
 version = "0.1.0"
 dependencies = [
- "display_macro-impl",
+ "display_me_impl",
 ]
 
 [[package]]
-name = "display_macro-impl"
+name = "display_me_impl"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -668,10 +673,11 @@ dependencies = [
  "anyhow",
  "common",
  "console_error_panic_hook",
- "display_macro",
+ "display_me",
  "leptos",
  "reqwasm",
  "serde",
+ "serde_json",
  "thiserror",
  "toml",
  "uuid",
