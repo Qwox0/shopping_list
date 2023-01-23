@@ -7,7 +7,7 @@ async fn main() -> std::io::Result<()> {
     use actix_web::*;
     use leptos::*;
     use leptos_actix::{generate_route_list, LeptosRoutes};
-    use leptos_ssr_template::app::*;
+    use shopping_list::app::*;
     use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
     let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;

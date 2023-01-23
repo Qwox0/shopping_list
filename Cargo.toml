@@ -1,5 +1,5 @@
 [package]
-name = "leptos_ssr_template"
+name = "shopping_list"
 version = "0.1.0"
 edition = "2021"
 
@@ -41,7 +41,7 @@ ssr = [
 ]
 
 [package.metadata.leptos]
-output-name = "leptos_ssr_template"
+output-name = "shopping_list"
 site-root = "target/site"
 site-pkg-dir = "pkg"
 env = "DEV" # The environment Leptos will run in, usually either "DEV" or "PROD"

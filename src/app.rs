@@ -8,12 +8,7 @@ pub fn App(cx: Scope) -> impl IntoView {
     provide_meta_context(cx);
 
     view! { cx,
-        // injects a stylesheet into the document <head>
-        // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/pkg/leptos_ssr_template.css"/>
-
-        // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <SiteHead />
 
         // content for this welcome page
         <Router>
@@ -23,6 +18,21 @@ pub fn App(cx: Scope) -> impl IntoView {
                 </Routes>
             </main>
         </Router>
+    }
+}
+
+#[component]
+fn SiteHead(cx: Scope) -> impl IntoView {
+    view! { cx,
+        <Meta charset="utf-8"/>
+        <Meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <Meta name="description" content="Fullstack Rust Shopping List"/>
+        <Stylesheet id="leptos" href="/pkg/shopping_list.css"/> // id=leptos means cargo-leptos will hot-reload this stylesheet
+        <Link rel="icon" type_="image/ico" href="/favicon.ico" />
+
+        <Script type_="text/javascript" src="init_sw.js"/>
+
+        <Title text="Shopping List"/>
     }
 }
 

@@ -1,0 +1,9 @@
+shopping_list="Einkaufsliste"
+
+[list_header]
+item_name="Name"
+amount="Anzahl (Standard: 1)"
+
+[item]
+edit="Bearbeiten"
+remove="Entfernen"

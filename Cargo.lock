@@ -1313,25 +1313,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "leptos_ssr_template"
-version = "0.1.0"
-dependencies = [
- "actix-files",
- "actix-web",
- "cfg-if",
- "console_error_panic_hook",
- "console_log",
- "leptos",
- "leptos_actix",
- "leptos_meta",
- "leptos_router",
- "log",
- "openssl",
- "simple_logger",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1954,6 +1935,25 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "shopping_list"
+version = "0.1.0"
+dependencies = [
+ "actix-files",
+ "actix-web",
+ "cfg-if",
+ "console_error_panic_hook",
+ "console_log",
+ "leptos",
+ "leptos_actix",
+ "leptos_meta",
+ "leptos_router",
+ "log",
+ "openssl",
+ "simple_logger",
+ "wasm-bindgen",
 ]
 
 [[package]]
