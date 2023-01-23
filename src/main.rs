@@ -1,5 +1,7 @@
 const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
 
+use shopping_list::language;
+
 #[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

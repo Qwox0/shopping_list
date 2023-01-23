@@ -11,7 +11,6 @@ const cacheFirst = [
     "/pkg/shopping_list.js",
     "/pkg/shopping_list.wasm",
     "/pwa.webmanifest",
-    "/style.scss",
     "/sw.js",
 ];
 const cacheAfter = [

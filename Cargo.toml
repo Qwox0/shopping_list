@@ -22,23 +22,22 @@ log = "0.4"
 simple_logger = "4"
 wasm-bindgen = "0.2"
 openssl = { version = "0.10.45", optional = true }
+reqwasm = "0.5.0"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.91"
+toml = "0.5.11"
+thiserror = "1.0.38"
+anyhow = "1.0.68"
+web-sys = { version = "0.3.60", features = ["Navigator", "Storage", "Window"] }
+uuid = { version = "1.2.2", features = ["v4", "js", "serde"] }
+display_me = { version = "0.1.0", path = "../display_me" }
 
 [features]
 default = ["ssr"]
-hydrate = [
-    "leptos/hydrate",
-    "leptos_meta/hydrate",
-    "leptos_router/hydrate",
-]
-ssr = [
-    "dep:actix-files",
-    "dep:actix-web",
-    "dep:leptos_actix",
-    "leptos/ssr",
-    "leptos_meta/ssr",
-    "leptos_router/ssr",
-    "openssl",
-]
+# used for frontend:
+hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+# used for server:
+ssr = ["dep:actix-files", "dep:actix-web", "dep:leptos_actix", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "openssl"]
 
 [package.metadata.leptos]
 output-name = "shopping_list"
