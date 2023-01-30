@@ -4,9 +4,9 @@ use serde::Deserialize;
 use super::Language;
 
 macro_rules! init_dict {
-    ( $vis:vis $dict_name:ident: $( $name:ident: $attr_type:ty ),* ) => {
+    ( $dict_name:ident: $( $name:ident: $attr_type:ty ),* ) => {
         #[derive(Deserialize, Eq, Hash, Debug, PartialEq, Clone)]
-        $vis struct $dict_name {
+        pub struct $dict_name {
             $(pub $name: $attr_type),*
         }
 
@@ -18,7 +18,7 @@ macro_rules! init_dict {
     };
 }
 
-init_dict! { pub Dictionary:
+init_dict! { Dictionary:
     shopping_list: String,
     list_header: ListHeaderDict,
     item: ItemDict

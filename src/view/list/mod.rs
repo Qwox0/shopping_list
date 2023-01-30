@@ -11,10 +11,11 @@ pub fn ShoppingList(cx: Scope) -> impl IntoView {
     //let list = create_resource(cx, move || 0, |_| get_items());
     //provide_context(cx, set_list);
     let (list, set_list) = create_signal(cx, ItemList::new());
+    provide_context(cx, set_list);
 
     let items = move || {
         view! { cx,
-            <For each=move || list.with(|l| l.items)
+            <For each=move || list.with(|l| l.items.clone())
                 key=|item| item.id
                 view=move |item| view! { cx,
                     <Item item/>

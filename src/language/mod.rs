@@ -1,17 +1,39 @@
 pub mod dictionary;
+pub mod selector;
 
 use self::dictionary::Dictionary;
 use self::text_macro::text;
+use anyhow::anyhow;
 use leptos::*;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::hash::Hash;
+use std::str::FromStr;
 
-const LANGUAGES: [Language; 2] = [Language::English, Language::German];
+pub const LANGUAGES: [Language; 2] = [Language::English, Language::German];
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub enum Language {
     English,
     German,
+}
+
+impl Default for Language {
+    fn default() -> Self {
+        Language::English
+    }
+}
+
+impl FromStr for Language {
+    type Err = String;
+
+    fn from_str(str: &str) -> Result<Self, Self::Err> {
+        match str {
+            "English" => Ok(Language::English),
+            "Deutsch" => Ok(Language::German),
+            _ => Err(str.to_string()),
+        }
+    }
 }
 
 impl Display for Language {
@@ -22,19 +44,16 @@ impl Display for Language {
         }
     }
 }
-impl TryFrom<String> for Language {
-    type Error = String;
-
-    fn try_from(str: String) -> Result<Self, Self::Error> {
-        match str.as_str() {
-            "English" => Ok(Language::English),
-            "Deutsch" => Ok(Language::German),
-            _ => Err(str),
-        }
-    }
-}
 
 impl Language {
+    pub fn try_from_short(str: impl Into<String>) -> anyhow::Result<Self> {
+        match str.into().as_str() {
+            "en" => Ok(Language::English),
+            "de" => Ok(Language::German),
+            s => Err(anyhow!("invalid short language string {}", s)),
+        }
+    }
+
     pub fn short(&self) -> String {
         match self {
             Language::English => "en",
@@ -43,6 +62,7 @@ impl Language {
         .to_owned()
     }
 }
+
 
 #[derive(Clone)]
 pub struct LangReader {
@@ -119,6 +139,7 @@ where
     }
 }
 
+/*
 #[component]
 pub fn LanguageSelector(cx: Scope, set_lang: WriteSignal<Language>) -> impl IntoView {
     let options: Vec<_> = LANGUAGES
@@ -138,6 +159,7 @@ pub fn LanguageSelector(cx: Scope, set_lang: WriteSignal<Language>) -> impl Into
         </select>
     }
 }
+*/
 
 /* -------------------------------------------------------------------------------------------------------------------------
 * replaced with Text component!

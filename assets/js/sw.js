@@ -1,17 +1,17 @@
 const cacheName = "shoppingListPWA-v1";
 const cacheFirst = [
     "/",
-    "/favicon.ico",
     "/img/bin.webp",
+    "/img/favicon.ico",
     "/img/pen.webp",
-    "/init_sw.js",
+    "/js/init_sw.js",
+    "/js/sw.js",
     "/language/en.toml",
     "/language/de.toml",
     "/pkg/shopping_list.css",
     "/pkg/shopping_list.js",
     "/pkg/shopping_list.wasm",
-    "/pwa.webmanifest",
-    "/sw.js",
+    "/manifest/pwa.webmanifest",
 ];
 const cacheAfter = [
     //"/icons/icon-1024.png",
@@ -93,7 +93,7 @@ const cache_over_network = async (event) => {
     if (response.source !== "cache") cache_add(event.request, response.response.clone());
     return response.response;
 };
-const network_only = async (event) => (await network_fetch(event.request)).response;
+const network_only = async (event) => (await network_fetch(event.request))?.response;
 self.addEventListener("fetch", event => {
     //event.respondWith(cache_over_network(event)); // for release
     event.respondWith(network_only(event)); // for dev

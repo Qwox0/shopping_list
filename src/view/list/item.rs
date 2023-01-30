@@ -21,7 +21,7 @@ pub fn Item(cx: Scope, item: Item) -> impl IntoView {
     view! { cx,
         <li state={move || item.state.get().as_attribute()} >
             <input type="checkbox"
-                checked={move || item.state.is_done()}
+                checked={move || item.state.with(|s| s.is_done())}
                 on:change=move |e| item.state.set(event_target_checked(&e).into())
             />
             <div class="text">
@@ -30,12 +30,12 @@ pub fn Item(cx: Scope, item: Item) -> impl IntoView {
             <div class="buttons">
                 <input type="image"
                     alt={text!(cx, |d| &d.item.edit)}
-                    src="/assets/pen.webp"
+                    src="/img/pen.webp"
                     on:click=move |e| {}
                     />
                 <input type="image"
                     alt={text!(cx, |d| &d.item.remove)}
-                    src="/assets/bin.webp"
+                    src="/img/bin.webp"
                     on:click=delete
                 />
             </div>

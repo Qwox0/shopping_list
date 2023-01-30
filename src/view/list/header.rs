@@ -1,10 +1,9 @@
 use leptos::*;
-
-use crate::language::text_macro::text;
+use crate::{language::text_macro::text, state::{item_list::ItemList, item::Item}};
 
 #[component]
 pub fn ListHeader(cx: Scope) -> impl IntoView {
-    let set_list = use_context::<WriteSignal<EntriesList>>(cx).unwrap();
+    let set_list = use_context::<WriteSignal<ItemList>>(cx).unwrap();
 
     let (new_item, set_new_item) = create_signal(cx, Item::new(cx, "", 1));
 
