@@ -18,14 +18,19 @@ async fn main() -> std::io::Result<()> {
     register_server_functions();
 
     let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
-    ssl_builder.set_private_key_file("privkey16.pem", SslFiletype::PEM)?;
-    ssl_builder.set_certificate_chain_file("fullchain16.pem")?;
+    let has_certs = ssl_builder
+        .set_private_key_file("privkey18.pem", SslFiletype::PEM)
+        .is_ok();
+    let has_certs = ssl_builder
+        .set_certificate_chain_file("fullchain16.pem")
+        .is_ok()
+        || has_certs;
 
     let conf = get_configuration(Some("./Cargo.toml")).await.unwrap();
     let addr = conf.leptos_options.site_address;
     // Generate the list of routes in your Leptos App
 
-    HttpServer::new(move || {
+    let server = HttpServer::new(move || {
         let leptos_options = &conf.leptos_options;
         let routes = generate_route_list(app);
         App::new()
@@ -34,8 +39,11 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/", &leptos_options.site_root))
             .wrap(middleware::Compress::default())
     })
-    .bind(&addr)?
-    .bind_openssl(SOCKET_ADDRESS, ssl_builder)?
-    .run()
-    .await
+    .bind(&addr)?;
+    let server = if has_certs {
+        server.bind_openssl(SOCKET_ADDRESS, ssl_builder)?
+    } else {
+        server
+    };
+    server.run().await
 }
