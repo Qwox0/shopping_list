@@ -1,15 +1,15 @@
 pub mod dictionary;
 pub mod selector;
 
-use self::dictionary::Dictionary;
+use self::dictionary::{get_dict, load_dictionary_action, Dictionary};
 use self::text_macro::text;
 use anyhow::anyhow;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::hash::Hash;
-use std::str::FromStr;
 
+#[allow(unused)]
 pub const LANGUAGES: [Language; 2] = [Language::English, Language::German];
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
@@ -24,14 +24,27 @@ impl Default for Language {
     }
 }
 
-impl FromStr for Language {
-    type Err = String;
+impl TryFrom<String> for Language {
+    type Error = anyhow::Error;
 
-    fn from_str(str: &str) -> Result<Self, Self::Err> {
-        match str {
+    fn try_from(str: String) -> Result<Self, Self::Error> {
+        match str.as_str() {
             "English" => Ok(Language::English),
             "Deutsch" => Ok(Language::German),
-            _ => Err(str.to_string()),
+            "en" => Ok(Language::English),
+            "de" => Ok(Language::German),
+            s => Err(anyhow!("Invalid language String: {}", s)),
+        }
+    }
+}
+
+impl TryFrom<Option<String>> for Language {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Option<String>) -> Result<Self, Self::Error> {
+        match value {
+            Some(str) => Language::try_from(str),
+            None => Err(anyhow!("`None` provided as language")),
         }
     }
 }
@@ -46,14 +59,6 @@ impl Display for Language {
 }
 
 impl Language {
-    pub fn try_from_short(str: impl Into<String>) -> anyhow::Result<Self> {
-        match str.into().as_str() {
-            "en" => Ok(Language::English),
-            "de" => Ok(Language::German),
-            s => Err(anyhow!("invalid short language string {}", s)),
-        }
-    }
-
     pub fn short(&self) -> String {
         match self {
             Language::English => "en",
@@ -63,60 +68,131 @@ impl Language {
     }
 }
 
-
 #[derive(Clone)]
-pub struct LangReader {
-    pub language: RwSignal<Language>,
-    pub dictionary: Resource<Language, Dictionary>,
+pub struct EmptyLanguageContext;
+
+//TODO: non pub content
+#[derive(Clone, Debug)]
+pub struct LanguageContext(pub RwSignal<Option<LanguageContextProps>>);
+//pub struct LanguageContext<T>(RwSignal<T>);
+
+impl LanguageContext {
+    pub fn new_empty(cx: Scope) -> Self {
+        LanguageContext(create_rw_signal(cx, None))
+    }
+
+    pub fn set_language(&self, cx: Scope, lang: Language) {
+        if self.is_set() {
+            self.0.get().unwrap().language.set(lang);
+        } else {
+            self.set_initial_language(cx, lang)
+        }
+        /*
+        self.0.update(|option| match option {
+            Some(a) => a.language.set(lang),
+            None => {
+                let _ = option.insert(LanguageContextProps::new(cx, lang));
+            }
+        });
+        */
+    }
+
+    pub fn set_initial_language(&self, cx: Scope, initial_language: Language) {
+        self.0.update(|option| {
+            //let _ = option.insert(LanguageContextProps::new(cx, initial_language));
+            *option = Some(LanguageContextProps::new(cx, initial_language));
+        });
+    }
+
+    pub fn get_word<T, F>(&self, getter: F) -> T
+    where
+        F: Fn(&crate::language::dictionary::Dictionary) -> &T,
+        T: Clone + std::default::Default,
+    {
+        self.0.with(|option| {
+            let props = option
+                .as_ref()
+                .expect("initial language was set for `LanguageContext`");
+            props
+                .dictionary
+                .with(|dict| dict.get(&getter))
+                .unwrap_or(props.initial_dict.get(&getter))
+        })
+    }
+
+    pub fn is_set(&self) -> bool {
+        self.0.with(|option| option.is_some())
+    }
+
+    pub fn get_lang(&self) -> Option<Language> {
+        self.0
+            .with(|option| option.as_ref().map(|props| props.language.get()))
+    }
 }
 
-impl LangReader {
-    pub fn new(cx: Scope) -> Self {
-        let language = create_rw_signal(cx, Language::English);
-        LangReader {
+//TODO: non pub
+#[derive(Clone, Debug)]
+pub struct LanguageContextProps {
+    pub language: RwSignal<Language>,
+    pub dictionary: Resource<Language, Dictionary>,
+    pub initial_dict: Dictionary,
+}
+
+impl LanguageContextProps {
+    pub fn new(cx: Scope, initial_language: Language) -> Self {
+        let initial_dict = get_dict(initial_language).unwrap_or_default();
+        let language = create_rw_signal(cx, initial_language);
+        // create_resource increases first page load
+        // create_local_resource loads imediately but overwrites the correct ssr'ed value
+        let dictionary = create_resource_with_initial_value(
+            //let dict = create_local_resource_with_initial_value(
+            cx,
+            //language,
             language,
-            dictionary: create_local_resource(cx, language, |lang| Dictionary::fetch(lang)),
+            move |lang| async move {
+                load_dictionary_action(lang)
+                    .await
+                    .expect("got valid Dictionary")
+            },
+            None,
+            //Some(initial_value.clone()), //-> thread 'actix-rt|system:0|arbiter:1' panicked at 'failed while trying to write to Resource serializer: TrySendError { kind: Disconnected }'
+        );
+        LanguageContextProps {
+            language,
+            dictionary,
+            initial_dict,
         }
     }
 }
 
 /// prevent multiple definitions of text
 pub(crate) mod text_macro {
+    #[allow(unused_imports)]
+    use crate::language::{dictionary::Dictionary, LanguageContextProps};
+    #[allow(unused_imports)]
+    use leptos::{view, Resource, Scope};
     /// get Text in the currently selected language
     /// For displaying text inside the [view] macro, use the [Text] component instead!
     ///
-    /// Parameters:
-    /// cx: Scope
-    /// getter: Fn(&[Dictionary]) -> &T,
+    /// ( $cx, $getter ) => { ... } -> (|| -> String)
+    /// ( $lang_context -> $getter ) => { ... } -> (|| -> String)
+    ///
+    /// # Types
+    ///
+    /// $cx: [Scope]
+    /// $lang_context: [LanguageContext]
+    /// $getter: FnOnce(&Dictionary) -> &T
+    /// [Dictionary]
     macro_rules! text {
-        ( $cx:ident, $getter:expr) => {{
-            #[inline(always)]
-            fn type_hint<T, F>(dict: &crate::language::dictionary::Dictionary, getter: F) -> T
-            where
-                F: Fn(&crate::language::dictionary::Dictionary) -> &T,
-                T: std::fmt::Display + Clone + std::default::Default,
-            {
-                getter(dict).clone()
-            }
-
-            move || {
-                format!(
-                    "{}",
-                    use_context::<crate::language::LangReader>($cx)
-                        .expect("`LangReader` context is available")
-                        .dictionary
-                        .with(|dict: &crate::language::dictionary::Dictionary| type_hint(
-                            dict, $getter
-                        ))
-                        .unwrap_or_default()
-                        /*
-                        (type_hint(
-                            &crate::language::dictionary::Dictionary::default(),
-                            $getter
-                        ))
-                        */
-                )
-            }
+        ( $cx:ident, $getter:expr ) => {{
+            let cx: ::leptos::Scope = $cx;
+            let lang_context = use_context::<crate::language::LanguageContext>(cx)
+                .expect("`LanguageContext` is available");
+            text!(lang_context -> $getter)
+        }};
+        ( $lang_context:ident -> $getter:expr ) => {{
+            let lang_context: crate::language::LanguageContext  = $lang_context;
+            move || { format!("{}", lang_context.get_word($getter)) }
         }};
     }
     pub(crate) use text;
@@ -129,13 +205,8 @@ where
     F: Fn(&Dictionary) -> &T + Copy + 'static,
     T: std::fmt::Display + Clone + std::default::Default,
 {
-    let language = use_context::<crate::language::LangReader>(cx)
-        .expect("`LangReader` context is available")
-        .language;
     view! { cx,
-        <span lang={move || language.with(|l| l.short())}>
-            { text!(cx, getter) }
-        </span>
+        <span> { text!(cx, getter) } </span>
     }
 }
 

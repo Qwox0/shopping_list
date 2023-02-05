@@ -3,6 +3,7 @@ const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
 #[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    //std::env::set_var("RUST_BACKTRACE", "full");
     fn app(cx: leptos::Scope) -> impl IntoView {
         use shopping_list::view::app::*;
         view! { cx, <App />}
@@ -19,7 +20,7 @@ async fn main() -> std::io::Result<()> {
 
     let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
     let has_certs = ssl_builder
-        .set_private_key_file("privkey18.pem", SslFiletype::PEM)
+        .set_private_key_file("privkey16.pem", SslFiletype::PEM)
         .is_ok();
     let has_certs = ssl_builder
         .set_certificate_chain_file("fullchain16.pem")
@@ -27,7 +28,7 @@ async fn main() -> std::io::Result<()> {
         || has_certs;
 
     let conf = get_configuration(Some("./Cargo.toml")).await.unwrap();
-    let addr = conf.leptos_options.site_address;
+    let addr = conf.leptos_options.site_addr;
     // Generate the list of routes in your Leptos App
 
     let server = HttpServer::new(move || {
@@ -41,6 +42,7 @@ async fn main() -> std::io::Result<()> {
     })
     .bind(&addr)?;
     let server = if has_certs {
+        log!("has certs");
         server.bind_openssl(SOCKET_ADDRESS, ssl_builder)?
     } else {
         server

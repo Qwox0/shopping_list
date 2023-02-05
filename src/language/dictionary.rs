@@ -1,11 +1,36 @@
-use anyhow::Context;
-use serde::Deserialize;
-
 use super::Language;
+use leptos::*;
+use serde::{Deserialize, Serialize};
+
+#[server(LoadDictionary, "/api")]
+pub async fn load_dictionary_action(lang: Language) -> Result<Dictionary, ServerFnError> {
+    //std::thread::sleep(std::time::Duration::from_millis(1000));
+    get_dict(lang).ok_or(ServerFnError::ServerError(format!("failed to load dict")))
+}
+
+/*
+fn test_load_dictionary(lang: Language) -> anyhow::Result<Dictionary> {
+    log!("load dictionary: {:?}", lang);
+    let path = format!("target/site/language/{}.toml", lang.short());
+    let content =
+        std::fs::read_to_string(&path).with_context(|| format!("failed to read file: {}", path))?;
+    toml::from_str::<Dictionary>(&content)
+        .with_context(|| format!("failed to parse language: {}", lang))
+}
+*/
+
+pub fn get_dict(lang: Language) -> Option<Dictionary> {
+    #[cfg(not(feature = "ssr"))]
+    return None;
+
+    let path = format!("target/site/language/{}.toml", lang.short());
+    let content = std::fs::read_to_string(&path).ok()?;
+    toml::from_str::<Dictionary>(&content).ok()
+}
 
 macro_rules! init_dict {
     ( $dict_name:ident: $( $name:ident: $attr_type:ty ),* ) => {
-        #[derive(Deserialize, Eq, Hash, Debug, PartialEq, Clone)]
+        #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         pub struct $dict_name {
             $(pub $name: $attr_type),*
         }
@@ -35,6 +60,14 @@ init_dict! { ItemDict:
 }
 
 impl Dictionary {
+    pub fn get<T, F>(&self, getter: F) -> T
+    where
+        F: Fn(&crate::language::dictionary::Dictionary) -> &T,
+        T: Clone,
+    {
+        getter(self).clone()
+    }
+    /*
     pub async fn fetch(lang: Language) -> Self {
         //log!("fetch Language: {:?}", lang);
         async {
@@ -51,6 +84,7 @@ impl Dictionary {
         .await
         .expect("no lang fetch error")
     }
+    */
 }
 
 /* ------------------------------ old pending values (now the default values are used (String -> ""))

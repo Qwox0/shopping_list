@@ -1,6 +1,7 @@
 mod header;
 mod item;
 
+use crate::language::text_macro::text;
 use crate::state::item_list::ItemList;
 use header::*;
 use item::*;
@@ -12,6 +13,8 @@ pub fn ShoppingList(cx: Scope) -> impl IntoView {
     //provide_context(cx, set_list);
     let (list, set_list) = create_signal(cx, ItemList::new());
     provide_context(cx, set_list);
+
+    let _ = text!(cx, |d| &d.shopping_list);
 
     let items = move || {
         view! { cx,

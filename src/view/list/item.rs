@@ -1,14 +1,9 @@
 use crate::{language::text_macro::text, state::item::Item};
 use leptos::*;
 
-#[server(TestServerFn)]
-pub async fn test() -> Result<(), ServerFnError> {
-    Ok(())
-}
-
 #[component]
 pub fn Item(cx: Scope, item: Item) -> impl IntoView {
-    let delete = move |e| {
+    let delete = move |_e| {
         let do_remove = window()
             .confirm_with_message(&format!("Do you want to remove {:?}?", item.name.get()))
             .unwrap_or_else(|jsVal| {
@@ -31,7 +26,7 @@ pub fn Item(cx: Scope, item: Item) -> impl IntoView {
                 <input type="image"
                     alt={text!(cx, |d| &d.item.edit)}
                     src="/img/pen.webp"
-                    on:click=move |e| {}
+                    on:click=move |_e| {}
                     />
                 <input type="image"
                     alt={text!(cx, |d| &d.item.remove)}

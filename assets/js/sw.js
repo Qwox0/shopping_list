@@ -1,6 +1,6 @@
 const cacheName = "shoppingListPWA-v1";
 const cacheFirst = [
-    "/",
+    //"/",
     "/img/bin.webp",
     "/img/favicon.ico",
     "/img/pen.webp",
@@ -32,6 +32,18 @@ const cacheAfter = [
 const log = (...args) => {
     console.log("[Service Worker] ", ...args)
 };
+const err = (...args) => {
+    console.error("[Service Worker] ", ...args)
+};
+
+const addAll = async (cache, requests) => {
+    for (req of requests) {
+        try { await cache.add(req); }
+        catch (e) {
+            err(`Failed to fetch "${req}"!`);
+        }
+    }
+};
 
 const cache_fetch = async (request) => {
     const response = await caches.match(request);
@@ -53,7 +65,7 @@ const network_fetch = async (request) => {
         log(`Fetched from Server: ${request.url}`);
         return { response, source: "network" }
     } catch (err) {
-        log(`Failed to fetch from Server: ${err}`);
+        err(`Failed to fetch from Server: ${err}`);
         return undefined;
     }
 };
@@ -64,10 +76,10 @@ self.addEventListener("install", event => {
     log("Install");
     event.waitUntil((async () => {
         const cache = await caches.open(cacheName);
-        log("Caching immediately: ", cacheFirst);
         log("slowly Caching: ", cacheAfter);
-        cache.addAll(cacheAfter);
-        await cache.addAll(cacheFirst);
+        addAll(cache, cacheAfter);
+        log("Caching immediately: ", cacheFirst);
+        await addAll(cache, cacheFirst);
     })());
 });
 

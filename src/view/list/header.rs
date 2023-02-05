@@ -1,5 +1,5 @@
-use leptos::*;
 use crate::{language::text_macro::text, state::{item_list::ItemList, item::Item}};
+use leptos::*;
 
 #[component]
 pub fn ListHeader(cx: Scope) -> impl IntoView {
