@@ -1,4 +1,4 @@
-use super::Language;
+use super::{Language, SITE_DEFAULT_LANGUAGE};
 use leptos::*;
 
 #[server(SetLanguage, "/api")]
@@ -23,14 +23,6 @@ pub async fn set_language(cx: Scope, new_language: Language) -> Result<Language,
 
     response.overwrite(response_parts);
     Ok(new_language)
-}
-
-pub fn language_from_cookie(cx: Scope) -> Language {
-    const SITE_DEFAULT_LANGUAGE: Language = Language::English;
-    crate::util::get_cookie(cx, "language")
-        .map(|s| Language::try_from(s).ok())
-        .flatten()
-        .unwrap_or(SITE_DEFAULT_LANGUAGE)
 }
 
 /*

@@ -14,8 +14,6 @@ pub fn ShoppingList(cx: Scope) -> impl IntoView {
     let (list, set_list) = create_signal(cx, ItemList::new());
     provide_context(cx, set_list);
 
-    let _ = text!(cx, |d| &d.shopping_list);
-
     let items = move || {
         view! { cx,
             <For each=move || list.with(|l| l.items.clone())

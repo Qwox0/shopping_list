@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::hash::Hash;
 
-#[allow(unused)]
 pub const LANGUAGES: [Language; 2] = [Language::English, Language::German];
+pub const SITE_DEFAULT_LANGUAGE: Language = Language::English;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
 pub enum Language {
@@ -66,6 +66,13 @@ impl Language {
         }
         .to_owned()
     }
+
+    pub fn from_cookie(cx: Scope) -> Language {
+        crate::util::get_cookie(cx, "language")
+            .map(|s| Language::try_from(s).ok())
+            .flatten()
+            .unwrap_or(SITE_DEFAULT_LANGUAGE)
+    }
 }
 
 #[derive(Clone)]
@@ -82,19 +89,11 @@ impl LanguageContext {
     }
 
     pub fn set_language(&self, cx: Scope, lang: Language) {
-        if self.is_set() {
-            self.0.get().unwrap().language.set(lang);
+        if let Some(a) = self.0.get() {
+            a.language.set(lang);
         } else {
             self.set_initial_language(cx, lang)
         }
-        /*
-        self.0.update(|option| match option {
-            Some(a) => a.language.set(lang),
-            None => {
-                let _ = option.insert(LanguageContextProps::new(cx, lang));
-            }
-        });
-        */
     }
 
     pub fn set_initial_language(&self, cx: Scope, initial_language: Language) {
@@ -119,15 +118,6 @@ impl LanguageContext {
                 .unwrap_or(props.initial_dict.get(&getter))
         })
     }
-
-    pub fn is_set(&self) -> bool {
-        self.0.with(|option| option.is_some())
-    }
-
-    pub fn get_lang(&self) -> Option<Language> {
-        self.0
-            .with(|option| option.as_ref().map(|props| props.language.get()))
-    }
 }
 
 //TODO: non pub
@@ -150,7 +140,7 @@ impl LanguageContextProps {
             //language,
             language,
             move |lang| async move {
-                load_dictionary_action(lang)
+                load_dictionary_action(cx, lang)
                     .await
                     .expect("got valid Dictionary")
             },

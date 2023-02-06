@@ -41,8 +41,10 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Compress::default())
     })
     .bind(&addr)?;
+    log!("bind {}", &addr);
+    log!("do ssl certificates exist?: {}", has_certs);
     let server = if has_certs {
-        log!("has certs");
+        log!("bind {}", SOCKET_ADDRESS);
         server.bind_openssl(SOCKET_ADDRESS, ssl_builder)?
     } else {
         server

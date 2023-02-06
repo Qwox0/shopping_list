@@ -1,5 +1,6 @@
 use crate::{
     language::{dictionary::LoadDictionary, selector::*, text_macro::text, *},
+    util::{get_cookie, get_window},
     view::{
         connection_status::*,
         list::{ShoppingList, ShoppingListProps},
@@ -48,7 +49,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                 <Routes>
                     { lang_route!("/de" => Language::German) }
                     { lang_route!("/en" => Language::English) }
-                    <Route path="" view=move |cx| view! { cx, <Redirect path="/en" /> }/>
+                    <Route path="" view=move |cx| view! { cx, <Redirect path=Language::from_cookie(cx).short() /> }/>
                 </Routes>
             </main>
         </Router>
@@ -73,11 +74,9 @@ fn SiteHead(cx: Scope) -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
-    let lc = use_context::<LanguageContext>(cx)
-        .expect("empty `LanguageContext` was provided inside the `App` component");
-    log!("lang1: {:?}", lc.get_lang());
-    lc.set_language(cx, lang);
-    log!("lang2: {:?}", lc.get_lang());
+    use_context::<LanguageContext>(cx)
+        .expect("empty `LanguageContext` was provided inside the `App` component")
+        .set_language(cx, lang);
 
     log!("path: {:?}", use_location(cx).pathname.get());
 

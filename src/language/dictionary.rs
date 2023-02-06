@@ -1,9 +1,15 @@
 use super::Language;
+use crate::util::set_cookie;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 
 #[server(LoadDictionary, "/api")]
-pub async fn load_dictionary_action(lang: Language) -> Result<Dictionary, ServerFnError> {
+pub async fn load_dictionary_action(
+    cx: Scope,
+    lang: Language,
+) -> Result<Dictionary, ServerFnError> {
+    log!("hey");
+    set_cookie(cx, "language", lang);
     //std::thread::sleep(std::time::Duration::from_millis(1000));
     get_dict(lang).ok_or(ServerFnError::ServerError(format!("failed to load dict")))
 }
