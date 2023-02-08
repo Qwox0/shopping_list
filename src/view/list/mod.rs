@@ -1,7 +1,6 @@
 mod header;
 mod item;
 
-use crate::language::text_macro::text;
 use crate::state::item_list::ItemList;
 use header::*;
 use item::*;

@@ -51,6 +51,7 @@ macro_rules! init_dict {
 
 init_dict! { Dictionary:
     shopping_list: String,
+    default: String,
     list_header: ListHeaderDict,
     item: ItemDict
 }
@@ -66,12 +67,12 @@ init_dict! { ItemDict:
 }
 
 impl Dictionary {
-    pub fn get<T, F>(&self, getter: F) -> T
+    pub fn get<'a, T, F>(&self, getter: F) -> String
     where
-        F: Fn(&crate::language::dictionary::Dictionary) -> &T,
-        T: Clone,
+        F: FnOnce(&'a crate::language::dictionary::Dictionary) -> T,
+        T: Into<&'a String>,
     {
-        getter(self).clone()
+        getter(self).into().clone()
     }
     /*
     pub async fn fetch(lang: Language) -> Self {

@@ -56,6 +56,7 @@ impl From<bool> for ItemState {
     }
 }
 
+/*
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemSerialized {
     pub id: Uuid,
@@ -85,3 +86,4 @@ impl ItemSerialized {
         }
     }
 }
+*/

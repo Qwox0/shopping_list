@@ -1,8 +1,9 @@
 shopping_list="Einkaufsliste"
+default="Standard"
 
 [list_header]
 item_name="Name"
-amount="Anzahl (Standard: 1)"
+amount="Anzahl"
 
 [item]
 edit="Bearbeiten"

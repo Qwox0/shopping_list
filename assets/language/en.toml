@@ -1,8 +1,9 @@
 shopping_list="Shopping List"
+default="Default"
 
 [list_header]
 item_name="Item Name"
-amount="Amount (Default: 1)"
+amount="Amount"
 
 [item]
 edit="Edit"

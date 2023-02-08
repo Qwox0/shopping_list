@@ -1,5 +1,4 @@
 pub mod dictionary;
-pub mod selector;
 
 use self::dictionary::{get_dict, load_dictionary_action, Dictionary};
 use self::text_macro::text;
@@ -9,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::hash::Hash;
 
-pub const LANGUAGES: [Language; 2] = [Language::English, Language::German];
+//pub const LANGUAGES: [Language; 2] = [Language::English, Language::German];
 pub const SITE_DEFAULT_LANGUAGE: Language = Language::English;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Serialize, Deserialize)]
@@ -103,10 +102,10 @@ impl LanguageContext {
         });
     }
 
-    pub fn get_word<T, F>(&self, getter: F) -> T
+    pub fn get_word<T, F>(&self, getter: F) -> String
     where
-        F: Fn(&crate::language::dictionary::Dictionary) -> &T,
-        T: Clone + std::default::Default,
+        F: FnOnce(&crate::language::dictionary::Dictionary) -> T,
+        T: Into<String>,
     {
         self.0.with(|option| {
             let props = option
@@ -114,8 +113,8 @@ impl LanguageContext {
                 .expect("initial language was set for `LanguageContext`");
             props
                 .dictionary
-                .with(|dict| dict.get(&getter))
-                .unwrap_or(props.initial_dict.get(&getter))
+                .with(|dict| dict.get(getter))
+                .unwrap_or(props.initial_dict.get(getter))
         })
     }
 }
@@ -192,8 +191,8 @@ pub(crate) mod text_macro {
 #[component]
 pub fn Text<F, T>(cx: Scope, getter: F) -> impl IntoView
 where
-    F: Fn(&Dictionary) -> &T + Copy + 'static,
-    T: std::fmt::Display + Clone + std::default::Default,
+    F: FnOnce(&Dictionary) -> T,
+    T: Into<String>,
 {
     view! { cx,
         <span> { text!(cx, getter) } </span>

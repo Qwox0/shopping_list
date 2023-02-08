@@ -1,6 +1,5 @@
 use crate::{
-    language::{dictionary::LoadDictionary, selector::*, text_macro::text, *},
-    util::{get_cookie, get_window},
+    language::{dictionary::LoadDictionary,  *},
     view::{
         connection_status::*,
         list::{ShoppingList, ShoppingListProps},
@@ -12,7 +11,7 @@ use leptos_router::*;
 
 #[cfg(feature = "ssr")]
 pub fn register_server_functions() {
-    _ = SetLanguage::register();
+    //_ = SetLanguage::register();
     _ = LoadDictionary::register();
 }
 

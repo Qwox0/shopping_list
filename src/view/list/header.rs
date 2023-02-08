@@ -12,14 +12,14 @@ pub fn ListHeader(cx: Scope) -> impl IntoView {
         <header>
             <input
                 type="text"
-                placeholder={text!(cx, |d| &d.list_header.item_name)}
+                placeholder=text!(cx, |d| &d.list_header.item_name)
                 class="new-item-name"
                 //on:focusout=move |e| set_new_item_name(event_target_value(&e))
                 on:focusout=move |e| set_new_item.update(|i| i.name.set(event_target_value(&e)))
             />
             <input
                 type="number"
-                placeholder={text!(cx, |d| &d.list_header.amount)}
+                placeholder=text!(cx, |d| format!("{} ({}: 1)", d.list_header.amount, d.default))
                 class="new-item-amount"
                 on:focusout=move |e| set_new_item.update(|i| i.amount.set(event_target_value(&e).parse().unwrap_or(1)))
             />
