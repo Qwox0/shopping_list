@@ -24,12 +24,12 @@ pub fn Item(cx: Scope, item: Item) -> impl IntoView {
             </div>
             <div class="buttons">
                 <input type="image"
-                    alt=text!(cx, |d| &d.item.edit)
+                    alt=text!(cx, |d| d.item.edit.clone())
                     src="/img/pen.webp"
                     on:click=move |_e| {}
                     />
                 <input type="image"
-                    alt=text!(cx, |d| &d.item.remove)
+                    alt=text!(cx, |d| d.item.remove.clone())
                     src="/img/bin.webp"
                     on:click=delete
                 />

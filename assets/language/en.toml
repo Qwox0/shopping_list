@@ -1,5 +1,5 @@
 shopping_list="Shopping List"
-default="Default"
+default_="Default"
 
 [list_header]
 item_name="Item Name"

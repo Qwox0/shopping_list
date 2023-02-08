@@ -1,5 +1,5 @@
 use crate::{
-    language::{dictionary::LoadDictionary,  *},
+    language::{context::LanguageContext, dictionary::LoadDictionary, *},
     view::{
         connection_status::*,
         list::{ShoppingList, ShoppingListProps},
@@ -27,12 +27,7 @@ pub fn App(cx: Scope) -> impl IntoView {
     macro_rules! lang_route {
         ( $path:expr => $lang:expr ) => {
             view! { cx,
-                <Route path=$path view=|cx| view! { cx, <HomePage lang=$lang/> }>
-                    <Route path="" view=move |cx| view! { cx,
-                        <h1> <Text getter=|d| &d.shopping_list/> </h1>
-                        <ShoppingList/>
-                    }/>
-                </Route>
+                <Route path=$path view=|cx| view! { cx, <HomePage lang=$lang/> } />
             }
         };
     }
@@ -77,7 +72,7 @@ fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
         .expect("empty `LanguageContext` was provided inside the `App` component")
         .set_language(cx, lang);
 
-    log!("path: {:?}", use_location(cx).pathname.get());
+    //log!("path: {:?}", use_location(cx).pathname.get());
 
     view! { cx,
         <header>
@@ -85,8 +80,8 @@ fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
             <ConnectionStatus/>
         </header>
         <main>
-            <Outlet/>
+            <h1> <Text getter=|d| d.shopping_list.clone()/> </h1>
+            <ShoppingList/>
         </main>
-        //{ text!(cx, |d| &d.shopping_list) }
     }
 }
