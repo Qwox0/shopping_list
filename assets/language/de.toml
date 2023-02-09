@@ -1,0 +1,12 @@
+shopping_list="Einkaufsliste"
+default_="Standard"
+
+[list_header]
+item_name="Name"
+amount="Anzahl"
+
+[item]
+edit="Bearbeiten"
+remove="Entfernen"
+remove_question_1="Möchtest du wirklich "
+remove_question_2=" entfernen?"

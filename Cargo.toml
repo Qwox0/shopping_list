@@ -1,21 +1,61 @@
-[workspace]
-members = [
-    "backend",
-    "frontend",
-    "common",
-]
-default-members = [ "backend" ] # used for `cargo build`
-
-[workspace.package]
+[package]
+name = "shopping_list"
 version = "0.1.0"
-authors = ["Qwox"]
+edition = "2021"
 
-[workspace.dependencies]
-anyhow = "1.0.68"
-display_me = { path = "../display_me" }
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+actix-files = { version = "0.6", optional = true }
+actix-web = { version = "4", optional = true, features = ["openssl", "macros"] }
+console_error_panic_hook = "0.1"
+console_log = "0.2"
+cfg-if = "1"
+leptos = { git = "https://github.com/leptos-rs/leptos", default-features = false, features = [
+  "serde",
+] }
+leptos_meta = { git = "https://github.com/leptos-rs/leptos", default-features = false }
+leptos_actix = { git = "https://github.com/leptos-rs/leptos", optional = true }
+leptos_router = { git = "https://github.com/leptos-rs/leptos", default-features = false }
+log = "0.4"
+simple_logger = "4"
+wasm-bindgen = "0.2"
+openssl = { version = "0.10.45", optional = true }
+reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
-uuid = { version = "1.2.2", features = ["serde", "js", "v4"] }
-reqwasm = "0.5.0"
+toml = "0.7.1"
 thiserror = "1.0.38"
-toml = "0.5.10"
+anyhow = "1.0.68"
+web-sys = { version = "0.3.60", features = ["Navigator", "Storage", "Window", "HtmlDocument", "Document"] }
+uuid = { version = "1.2.2", features = ["v4", "js", "serde"] }
+display_me = { git = "https://github.com/Qwox0/display_me", version = "0.1.0" }
+reqwasm = "0.5.0"
+
+[features]
+default = ["ssr"]
+# used for frontend:
+hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
+# used for server:
+ssr = ["dep:actix-files", "dep:actix-web", "dep:leptos_actix", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "openssl"]
+
+[package.metadata.leptos]
+output-name = "shopping_list"
+site-root = "target/site"
+site-pkg-dir = "pkg"
+env = "DEV" # The environment Leptos will run in, usually either "DEV" or "PROD"
+site-addr = "127.0.0.1:3000" # In this Template this is used for dev only! See main.rs
+reload-port = 3001 # The port to use for automatic reload monitoring
+
+style-file = "style/main.scss"
+assets-dir = "assets" # Assets source dir. All files found here will be copied and synchronized to site-root. The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir. Optional. Env: LEPTOS_ASSETS_DIR.
+browserquery = "defaults" #  The browserlist query used for optimizing the CSS.
+watch = false # Set by cargo-leptos watch when building with that tool. Controls whether autoreload JS will be included in the head
+bin-features = ["ssr"] # The features to use when compiling the bin target. Optional. Can be over-ridden with the command line parameter --bin-features
+
+bin-default-features = false # If the --no-default-features flag should be used when compiling the bin target. Optional. Defaults to false.
+
+lib-features = ["hydrate"] # The features to use when compiling the lib target. Optional. Can be over-ridden with the command line parameter --lib-features
+
+lib-default-features = false # If the --no-default-features flag should be used when compiling the lib target. Optional. Defaults to false.
