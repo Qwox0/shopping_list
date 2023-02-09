@@ -1,10 +1,23 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: sans-serif;
     //text-align: center;
 }
 
-* {
-    box-sizing: border-box;
+section.shopping-list > header {
+    display: flex;
+    flex-wrap: wrap;
+
+    .new-item-name,
+    .new-item-amount {
+        flex: 1 0 0px;
+    }
+    .new-item-button {
+        aspect-ratio : 1 / 1;
+    }
 }
 
 section.shopping-list > ul {
@@ -24,6 +37,7 @@ section.shopping-list > ul li {
     }
     div.buttons {
         justify-self: end;
+        aspect-ratio : 1 / 1;
     }
     // & = self
     & > div.buttons input {
@@ -39,9 +53,6 @@ section.shopping-list > ul li {
     &:hover > div.buttons input {
         opacity: 100%;
     }
-
-
-
 }
 
 section.shopping-list > ul li:last-child {

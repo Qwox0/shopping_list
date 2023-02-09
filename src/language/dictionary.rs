@@ -15,7 +15,7 @@ pub async fn load_dictionary_action(
 }
 
 macro_rules! init_dict {
-    ( $dict_name:ident: $( $name:ident: $attr_type:ty ),* ) => {
+    ( $dict_name:ident -> $( $name:ident: $attr_type:ty, )* ) => {
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         pub struct $dict_name {
             $(pub $name: $attr_type),*
@@ -27,23 +27,28 @@ macro_rules! init_dict {
             }
         }
     };
+    ( $dict_name:ident -> $( $name:ident: $attr_type:ty ),* ) => {
+        init_dict! { $dict_name -> $( $name: $attr_type, )* }
+    };
 }
 
-init_dict! { Dictionary:
+init_dict! { Dictionary ->
     shopping_list: String,
     default_: String,
     list_header: ListHeaderDict,
     item: ItemDict
 }
 
-init_dict! { ListHeaderDict:
+init_dict! { ListHeaderDict ->
     item_name: String,
-    amount: String
+    amount: String,
 }
 
-init_dict! { ItemDict:
+init_dict! { ItemDict ->
     edit: String,
-    remove: String
+    remove: String,
+    remove_question_1: String, // first part
+    remove_question_2: String, // second part
 }
 
 impl Dictionary {
@@ -56,9 +61,8 @@ impl Dictionary {
         let path = format!("target/site/language/{}.toml", language.short());
         let content =
             std::fs::read_to_string(&path).context(format!("failed to read file: {:?}", path))?;
-        Ok(toml::from_str::<Dictionary>(&content)
-            .unwrap())
-            //.context(format!("failed to parse Dictionary from: {:?}", path))
+        Ok(toml::from_str::<Dictionary>(&content).unwrap())
+        //.context(format!("failed to parse Dictionary from: {:?}", path))
     }
 }
 

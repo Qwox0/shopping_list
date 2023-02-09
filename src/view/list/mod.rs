@@ -1,15 +1,18 @@
 mod header;
 mod item;
 
-use crate::state::item_list::ItemList;
+use crate::state::list::ItemList;
 use header::*;
 use item::*;
 use leptos::*;
+
+
 
 #[component]
 pub fn ShoppingList(cx: Scope) -> impl IntoView {
     //let list = create_resource(cx, move || 0, |_| get_items());
     //provide_context(cx, set_list);
+    //create_resource_with_initial_value(cx, || (), move ||, initial_value)
     let (list, set_list) = create_signal(cx, ItemList::new());
     provide_context(cx, set_list);
 
@@ -27,7 +30,7 @@ pub fn ShoppingList(cx: Scope) -> impl IntoView {
     view! {cx,
         <section class="shopping-list">
             <ListHeader/>
-            <ul>
+            <ul class="items">
                 {items}
             </ul>
 

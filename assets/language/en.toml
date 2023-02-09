@@ -8,3 +8,5 @@ amount="Amount"
 [item]
 edit="Edit"
 remove="Remove"
+remove_question_1="Do you want to remove "
+remove_question_2="?"

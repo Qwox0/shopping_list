@@ -1,16 +1,22 @@
-use crate::{language::text_macro::text, state::item::Item};
+use crate::{language::text_macro::text, state::list::item::Item};
 use leptos::*;
 
 #[component]
 pub fn Item(cx: Scope, item: Item) -> impl IntoView {
     let delete = move |_e| {
+        let remove_question = text!(cx, |d| format!(
+            "{}{:?}{}",
+            d.item.remove_question_1,
+            item.name.get(),
+            d.item.remove_question_2
+        ))();
         let do_remove = window()
-            .confirm_with_message(&format!("Do you want to remove {:?}?", item.name.get()))
+            .confirm_with_message(&remove_question)
             .unwrap_or_else(|jsVal| {
                 log!("remove error {:?}", jsVal);
                 false
             });
-        log!("{}", do_remove);
+        log!("do_remove: {}?", do_remove);
     };
 
     view! { cx,

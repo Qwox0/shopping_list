@@ -1,2 +1,1 @@
-pub mod item;
-pub mod item_list;
+pub mod list;
