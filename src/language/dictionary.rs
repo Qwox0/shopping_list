@@ -1,5 +1,5 @@
 use super::Language;
-use crate::util::set_cookie;
+#[allow(unused_imports)]
 use anyhow::Context;
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -9,7 +9,7 @@ pub async fn load_dictionary_action(
     cx: Scope,
     lang: Language,
 ) -> Result<Dictionary, ServerFnError> {
-    set_cookie(cx, "language", lang);
+    crate::util::set_cookie(cx, "language", lang);
     Dictionary::try_from_language(lang)
         .map_err(|err| ServerFnError::ServerError(format!("failed to load dict: {}", err)))
 }
@@ -54,15 +54,19 @@ init_dict! { ItemDict ->
 impl Dictionary {
     /// trys to read the language file (see "target/site/language/{some_lang_in_short}.toml") for
     /// the given language and interprets it
+    #[allow(unused_variables)]
     pub fn try_from_language(language: Language) -> anyhow::Result<Dictionary> {
         #[cfg(not(feature = "ssr"))]
         anyhow::bail!("language files are only available on the server!");
 
-        let path = format!("target/site/language/{}.toml", language.short());
-        let content =
-            std::fs::read_to_string(&path).context(format!("failed to read file: {:?}", path))?;
-        Ok(toml::from_str::<Dictionary>(&content).unwrap())
-        //.context(format!("failed to parse Dictionary from: {:?}", path))
+        #[cfg(feature = "ssr")]
+        {
+            let path = format!("target/site/language/{}.toml", language.short());
+            let content = std::fs::read_to_string(&path)
+                .context(format!("failed to read file: {:?}", path))?;
+            Ok(toml::from_str::<Dictionary>(&content).unwrap())
+            //.context(format!("failed to parse Dictionary from: {:?}", path))
+        }
     }
 }
 

@@ -119,4 +119,3 @@ where
         <span> { text!(cx, &getter) } </span>
     }
 }
-

@@ -1,11 +1,12 @@
+pub mod app;
+mod connection_status;
 mod language;
-mod state;
+mod list;
 mod util;
-pub mod view;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "hydrate")] {
-        use view::app::*;
+        use app::*;
         use leptos::*;
         use wasm_bindgen::prelude::wasm_bindgen;
 

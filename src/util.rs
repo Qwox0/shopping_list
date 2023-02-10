@@ -13,7 +13,8 @@ pub fn get_window() -> Option<Window> {
 
 /// Returns the value of the (first) cookie with the given name.
 /// During SSR this checks the Request Cookies
-pub fn get_cookie<'a>(cx: Scope, cookie_name: impl Into<String>) -> Option<String> {
+#[allow(unused_variables)]
+pub fn get_cookie(cx: Scope, cookie_name: impl Into<String>) -> Option<String> {
     let cookie_name = cookie_name.into();
 
     #[cfg(not(feature = "ssr"))]
@@ -52,6 +53,7 @@ pub fn set_cookie(cx: Scope, key: impl Display, value: impl Display) {
     response.overwrite(response_parts);
 }
 
+#[allow(unused)]
 #[cfg(not(feature = "ssr"))]
 pub fn set_cookie(cx: Scope, key: impl Display, value: impl Display) {
     unimplemented!()
