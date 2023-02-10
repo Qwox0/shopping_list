@@ -4,17 +4,16 @@ const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     //std::env::set_var("RUST_BACKTRACE", "full");
+    //std::env::set_var("RUST_BACKTRACE", "1");
+    use shopping_list::app::*;
     fn app(cx: leptos::Scope) -> impl IntoView {
-        use shopping_list::view::app::*;
         view! { cx, <App />}
     }
-    //std::env::set_var("RUST_BACKTRACE", "1");
     use actix_files::Files;
     use actix_web::*;
     use leptos::*;
     use leptos_actix::{generate_route_list, LeptosRoutes};
     use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
-    use shopping_list::view::app::*;
 
     register_server_functions();
 

@@ -1,9 +1,7 @@
 use crate::{
-    language::{context::LanguageContext, dictionary::LoadDictionary, *},
-    view::{
-        connection_status::*,
-        list::{ShoppingList, ShoppingListProps},
-    },
+    connection_status::*,
+    language::{context::LanguageContext, *},
+    list::{ShoppingList, ShoppingListProps},
 };
 use leptos::*;
 use leptos_meta::*;
@@ -12,7 +10,7 @@ use leptos_router::*;
 #[cfg(feature = "ssr")]
 pub fn register_server_functions() {
     //_ = SetLanguage::register();
-    _ = LoadDictionary::register();
+    _ = crate::language::dictionary::LoadDictionary::register();
 }
 
 #[component]

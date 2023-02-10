@@ -1,12 +1,25 @@
 mod header;
 mod item;
 
-use crate::state::list::ItemList;
 use header::*;
 use item::*;
 use leptos::*;
 
+#[derive(Clone)]
+struct ItemList {
+    pub items: Vec<Item>,
+}
 
+impl ItemList {
+    pub fn new() -> Self {
+        ItemList { items: Vec::new() }
+    }
+
+    pub fn add(&mut self, item: Item) {
+        self.items.push(item)
+
+    }
+}
 
 #[component]
 pub fn ShoppingList(cx: Scope) -> impl IntoView {
