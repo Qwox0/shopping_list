@@ -1,8 +1,10 @@
 const cacheName = "shoppingListPWA-v1";
 const cacheFirst = [
-    //"/",
+    "/",
+    "/en",
+    "/de",
+    "/favicon.ico",
     "/img/bin.webp",
-    "/img/favicon.ico",
     "/img/pen.webp",
     "/js/init_sw.js",
     "/js/sw.js",
@@ -11,7 +13,7 @@ const cacheFirst = [
     "/pkg/shopping_list.css",
     "/pkg/shopping_list.js",
     "/pkg/shopping_list.wasm",
-    "/manifest/pwa.webmanifest",
+    "/pwa.webmanifest",
 ];
 const cacheAfter = [
     //"/icons/icon-1024.png",
@@ -101,14 +103,19 @@ self.addEventListener("activate", event => {
 const cache_over_network = async (event) => {
     const response = await cache_fetch(event.request) || await network_fetch(event.request);
     if (!response) return; // todo: case: no cache + no connection
-    //if (response.source !== "cache") cache_add(event.request, response.response);
     if (response.source !== "cache") cache_add(event.request, response.response.clone());
     return response.response;
 };
 const network_only = async (event) => (await network_fetch(event.request))?.response;
+const network_over_cache = async (event) => {
+    const response =  await network_fetch(event.request) || await cache_fetch(event.request);
+    if (!response) return; // todo: case: no cache + no connection
+    if (response.source !== "cache") cache_add(event.request, response.response.clone());
+    return response.response;
+};
 self.addEventListener("fetch", event => {
     //event.respondWith(cache_over_network(event)); // for release
-    event.respondWith(network_only(event)); // for dev
+    event.respondWith(network_over_cache(event)); // for dev
 });
 /*
 self.addEventListener("fetch", event => {
