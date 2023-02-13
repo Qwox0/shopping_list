@@ -108,7 +108,8 @@ const cache_over_network = async (event) => {
 };
 const network_only = async (event) => (await network_fetch(event.request))?.response;
 const network_over_cache = async (event) => {
-    const response =  await network_fetch(event.request) || await cache_fetch(event.request);
+    const response = await network_fetch(event.request) || await cache_fetch(event.request);
+    log("response:", response)
     if (!response) return; // todo: case: no cache + no connection
     if (response.source !== "cache") cache_add(event.request, response.response.clone());
     return response.response;

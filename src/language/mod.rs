@@ -1,7 +1,6 @@
 pub mod context;
 pub mod dictionary;
 
-use self::context::LanguageContextProps;
 use self::dictionary::Dictionary;
 use self::text_macro::text;
 use anyhow::anyhow;
@@ -78,22 +77,18 @@ impl Language {
 
 /// prevent multiple definitions of text
 pub(crate) mod text_macro {
-    #[allow(unused_imports)]
-    use crate::language::{dictionary::Dictionary, LanguageContextProps};
-    #[allow(unused_imports)]
-    use leptos::{view, Resource, Scope};
     /// get Text in the currently selected language
-    /// For displaying text inside the [view] macro, use the [Text] component instead!
+    /// For displaying text inside the [leptos::view] macro, use the [crate::language::Text] component instead!
     ///
     /// ( $cx, $getter ) => { ... } -> (|| -> String)
     /// ( $lang_context -> $getter ) => { ... } -> (|| -> String)
     ///
     /// # Types
     ///
-    /// $cx: [Scope]
-    /// $lang_context: [LanguageContext]
+    /// $cx: [leptos::Scope]
+    /// $lang_context: [crate::language::context::LanguageContext]
     /// $getter: FnOnce(&Dictionary) -> &T
-    /// [Dictionary]
+    /// [crate::language::dictionary::Dictionary]
     macro_rules! text {
         ( $cx:ident, $getter:expr ) => {{
             let cx: ::leptos::Scope = $cx;

@@ -11,7 +11,7 @@ use leptos_router::*;
 #[cfg(feature = "ssr")]
 pub fn register_server_functions() {
     //_ = SetLanguage::register();
-    _ = crate::language::dictionary::LoadDictionary::register();
+    //_ = crate::language::dictionary::LoadDictionary::register();
 }
 
 #[component]
