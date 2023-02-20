@@ -1,6 +1,24 @@
 use leptos::*;
 use std::fmt::Display;
 
+// Extend leptos
+
+pub trait ReadSignalUtils<T: PartialEq> {
+    fn contains(&self, rhs: &T) -> bool;
+}
+
+impl<T: PartialEq> ReadSignalUtils<T> for ReadSignal<T> {
+    fn contains(&self, rhs: &T) -> bool {
+        self.with(|x| x == rhs)
+    }
+}
+
+impl<T: PartialEq> ReadSignalUtils<T> for RwSignal<T> {
+    fn contains(&self, rhs: &T) -> bool {
+        self.with(|x| x == rhs)
+    }
+}
+
 /// Returns the [Window] Object if on the Client.
 /// During SSR this returns `None`
 pub fn get_window() -> Option<web_sys::Window> {

@@ -1,3 +1,5 @@
+$list-border: 1px solid #ddd;
+
 * {
     box-sizing: border-box;
 }
@@ -7,40 +9,60 @@ body {
     //text-align: center;
 }
 
-section.shopping-list > header {
-    display: flex;
-    flex-wrap: wrap;
+section.shopping-list {
+    > header {
+        > div.input-fields {
+            display: flex;
+            flex-wrap: wrap;
 
-    .new-item-name,
-    .new-item-amount {
-        flex: 1 0 0px;
+            .new-item-name,
+            .new-item-amount {
+                flex: 1 0 0px;
+            }
+            .new-item-button {
+                aspect-ratio : 1 / 1;
+            }
+        }
+        > div.new-item-preview [hidden] {
+            display: none;
+        }
     }
-    .new-item-button {
-        aspect-ratio : 1 / 1;
+
+    > ul {
+        list-style-type: none;
+        padding: 0;
+        border: $list-border;
+
+        li:last-child > div.item {
+            border-bottom: none
+        }
     }
 }
 
-section.shopping-list > ul {
-    list-style-type: none;
-    padding: 0;
-    border: 1px solid #ddd;
-}
 
-section.shopping-list > ul li {
+div.item {
     padding: 8px 16px;
-    border-bottom: 1px solid #ddd;
-
+    border-bottom: $list-border;
     display: flex;
     align-items: center;
-    div.text {
+
+    > div.text {
         flex: 1 0 0px;
     }
-    div.buttons {
-        justify-self: end;
-        aspect-ratio : 1 / 1;
+    &[state="completed"] > div.text {
+        text-decoration: line-through;
     }
-    // & = self
-    & > div.buttons input {
+
+    > div.buttons {
+        justify-self: end;
+
+        display: flex;
+
+        > input {
+            aspect-ratio : 1 / 1;
+        }
+    }
+    > div.buttons > input {
         opacity: 0%;
         width: 50px;
         height: 50px;
@@ -50,17 +72,9 @@ section.shopping-list > ul li {
         border: 2px outset buttonborder;
         border-radius: 30%;
     }
-    &:hover > div.buttons input {
+    &:hover > div.buttons > input {
         opacity: 100%;
     }
-}
 
-section.shopping-list > ul li:last-child {
-    border-bottom: none
 }
-
-section.shopping-list > ul li[state="completed"] div.text {
-    text-decoration: line-through;
-}
-
 

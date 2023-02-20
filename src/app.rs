@@ -2,7 +2,7 @@ use crate::head::{SiteHead, SiteHeadProps};
 use crate::{
     connection_status::*,
     language::{context::LanguageContext, *},
-    list::{ShoppingList, ShoppingListProps},
+    list::list_view::{ListView, ListViewProps},
 };
 use leptos::*;
 use leptos_meta::*;
@@ -65,7 +65,7 @@ fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
         </header>
         <main>
             <h1> <Text getter=|d| d.shopping_list.clone()/> </h1>
-            <ShoppingList/>
+            <ListView/>
         </main>
     }
 }
