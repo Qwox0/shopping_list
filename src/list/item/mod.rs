@@ -17,7 +17,7 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn with_state(cx: Scope, name: impl Into<String>, amount: usize, state: ItemState) -> Self {
+    pub fn new(cx: Scope, name: impl Into<String>, amount: usize, state: ItemState) -> Self {
         Item {
             id: Uuid::new_v4(),
             name: create_rw_signal(cx, name.into()),
@@ -26,13 +26,13 @@ impl Item {
         }
     }
 
-    pub fn new(cx: Scope, name: impl Into<String>, amount: usize) -> Self {
-        Item::with_state(cx, name, amount, ItemState::Needed)
+    pub fn empty(cx: Scope) -> Self {
+        Item::new(cx, "", 1, ItemState::Needed)
     }
 
     /// Clone Item from new_item and decouple Signals.
     pub fn from_new_item(cx: Scope, new_item: Item) -> Self {
-        Item::with_state(
+        Item::new(
             cx,
             new_item.name.get(),
             new_item.amount.get(),

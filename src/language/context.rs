@@ -24,7 +24,7 @@ impl LanguageContext {
         });
     }
 
-    pub fn get_word<F>(&self, getter: F) -> String
+    pub fn get_word<F>(&self, cx: Scope, getter: F) -> String
     where
         F: Fn(&crate::language::dictionary::Dictionary) -> String,
     {
@@ -32,7 +32,7 @@ impl LanguageContext {
             props
                 .as_ref()
                 .expect("initial language was set for `LanguageContext`")
-                .get_word(getter)
+                .get_word(cx, getter)
         })
     }
 }
@@ -60,8 +60,8 @@ impl LanguageContextProps {
                     .await
                     .expect("able to fetch Dictionary")
             },
-            None,
-            //Some(initial_value.clone()), //-> thread 'actix-rt|system:0|arbiter:1' panicked at 'failed while trying to write to Resource serializer: TrySendError { kind: Disconnected }'
+            //None,
+            Some(initial_dict.clone()), //-> thread 'actix-rt|system:0|arbiter:1' panicked at 'failed while trying to write to Resource serializer: TrySendError { kind: Disconnected }'
         );
         LanguageContextProps {
             language,
@@ -70,13 +70,13 @@ impl LanguageContextProps {
         }
     }
 
-    pub fn get_word<F, S>(&self, getter: F) -> String
+    pub fn get_word<F, S>(&self, cx: Scope, getter: F) -> String
     where
         F: Fn(&crate::language::dictionary::Dictionary) -> S,
         S: Into<String>,
     {
         self.dictionary
-            .with(|s| getter(s))
+            .with(cx, |s| getter(s))
             .unwrap_or(getter(&self.initial_dict))
             .into()
     }

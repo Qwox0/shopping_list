@@ -38,7 +38,7 @@ pub fn ListView(cx: Scope) -> impl IntoView {
         view! { cx,
             <For each=move || list().into_iter().rev() //move || list.with(|l| l.items.clone())
                 key=|item| item.id
-                view=move |item| view! { cx,
+                view=move |cx, item| view! { cx,
                     <li> <ItemView item/> </li>
                 }
             />

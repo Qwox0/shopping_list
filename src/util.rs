@@ -33,7 +33,10 @@ pub fn get_html_document() -> Option<web_sys::HtmlDocument> {
     #[cfg(feature = "ssr")]
     return None;
     #[cfg(not(feature = "ssr"))]
-    return Some(document().unchecked_into::<web_sys::HtmlDocument>());
+    {
+        use wasm_bindgen::JsCast;
+        return Some(document().unchecked_into::<web_sys::HtmlDocument>());
+    }
 }
 
 /// Returns the value of the (first) cookie with the given name.

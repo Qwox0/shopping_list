@@ -11,24 +11,15 @@ use leptos::*;
 
 #[component]
 pub fn ListHeader(cx: Scope) -> impl IntoView {
-    /*
-    let set_list = |list: &ItemList| {
-        use_context::<SetShoppingListAction>(cx)
-            .expect("`SetShoppingListAction` is available")
-            .set_list(list)
-    };
-    */
     let set_list =
         use_context::<WriteSignal<ItemList>>(cx).expect("`WriteSignal<ItemList>` is available");
 
-    let (new_item, set_new_item) = create_signal(cx, Item::new(cx, "", 1));
-    let s = move || new_item().name;// create_rw_signal(cx, String::new());
-    let is_preview_empty = move || new_item().name.get();
-    //move || new_item.with(|i| i.name.contains(&"".to_string()) && i.amount.contains(&1));
-    //create_effect(cx, move |_| log!("{}", is_preview_empty()));
-    let is_preview_empty2 = move || s().get();
-    create_effect(cx, move |_| log!("{}", is_preview_empty2()));
-    create_effect(cx, move |_| log!("{}", new_item()));
+    let (new_item, set_new_item) = create_signal(cx, Item::empty(cx));
+    let (new_item_name, set_new_item_name) = new_item().name.split();
+    let (new_item_amount, set_new_item_amount) = new_item().amount.split();
+
+    let is_preview_empty = move || new_item_name() == "" && new_item_amount() == 1;
+    create_effect(cx, move |_| log!("{}", is_preview_empty()));
 
     view! {
         cx,
@@ -39,7 +30,7 @@ pub fn ListHeader(cx: Scope) -> impl IntoView {
                     placeholder=text!(cx, |d| d.list_header.item_name.clone())
                     class="new-item-name"
                     //on:focusout=move |e| set_new_item_name(event_target_value(&e))
-                    on:input=move |e| s().set(event_target_value(&e))
+                    on:input=move |e| set_new_item_name(event_target_value(&e))
                     //on:input=move |e| set_new_item.update(|i| i.name.set(event_target_value(&e)))
                 />
                 <input

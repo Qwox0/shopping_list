@@ -67,5 +67,15 @@ fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
             <h1> <Text getter=|d| d.shopping_list.clone()/> </h1>
             <ListView/>
         </main>
+        <Test/>
     }
+}
+
+#[component]
+fn Test(cx:Scope) -> impl IntoView {
+    view! { cx,
+        <div class="test">
+        </div>
+    }
+
 }
