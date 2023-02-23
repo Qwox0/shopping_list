@@ -1,4 +1,7 @@
+#![feature(result_flattening)]
 #![allow(unused)]
+
+
 pub mod app;
 mod connection_status;
 mod head;

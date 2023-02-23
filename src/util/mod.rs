@@ -1,3 +1,6 @@
+pub mod local_storage;
+pub mod from_with_scope;
+
 use leptos::*;
 use std::fmt::Display;
 
@@ -19,8 +22,8 @@ impl<T: PartialEq> ReadSignalUtils<T> for RwSignal<T> {
     }
 }
 
-/// Returns the [Window] Object if on the Client.
-/// During SSR this returns `None`
+/// Returns the [`web_sys::Window`] Object if on the Client.
+/// During SSR this returns [`None`]
 pub fn get_window() -> Option<web_sys::Window> {
     #[cfg(feature = "ssr")]
     return None;
@@ -67,6 +70,13 @@ pub fn get_cookie(cx: Scope, cookie_name: impl Into<String>) -> Option<String> {
 pub fn set_cookie(cx: Scope, key: impl Display, value: impl Display) {
     let cookie = format!("{key}={value}; Path=/");
 
+    #[cfg(not(feature = "ssr"))]
+    {
+        get_html_document()
+            .expect("Document is available on the Client")
+            .set_cookie(&cookie)
+            .expect("no error while setting cookie")
+    }
     #[cfg(feature = "ssr")]
     {
         use actix_web::http::header::{HeaderMap, HeaderValue, SET_COOKIE};
@@ -82,12 +92,5 @@ pub fn set_cookie(cx: Scope, key: impl Display, value: impl Display) {
         );
         response_parts.headers = headers;
         response.overwrite(response_parts);
-    }
-    #[cfg(not(feature = "ssr"))]
-    {
-        get_html_document()
-            .expect("Document is available on the Client")
-            .set_cookie(&cookie)
-            .expect("no error while setting cookie")
     }
 }

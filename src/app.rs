@@ -2,7 +2,7 @@ use crate::head::{SiteHead, SiteHeadProps};
 use crate::{
     connection_status::*,
     language::{context::LanguageContext, *},
-    list::list_view::{ListView, ListViewProps},
+    list::{ListView, ListViewProps},
 };
 use leptos::*;
 use leptos_meta::*;
@@ -21,7 +21,8 @@ pub fn App(cx: Scope) -> impl IntoView {
 
     // provide language text to all components (use <Text /> or text!())
     // the initial language still has to be set!
-    provide_context(cx, LanguageContext::new_empty(cx));
+    let language = create_rw_signal(cx, Language::from_cookies(cx).unwrap_or_default());
+    provide_context(cx, LanguageContext::new(cx, language));
 
     macro_rules! lang_route {
         ( $path:expr => $lang:expr ) => {
@@ -42,7 +43,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                 <Routes>
                     { lang_route!("/de" => Language::German) }
                     { lang_route!("/en" => Language::English) }
-                    <Route path="" view=move |cx| view! { cx, <Redirect path=Language::from_cookie(cx).short() /> }/>
+                    <Route path="" view=move |cx| view! { cx, <Redirect path=language.get().short() /> }/>
                 </Routes>
             </main>
         </Router>
@@ -53,7 +54,7 @@ pub fn App(cx: Scope) -> impl IntoView {
 #[component]
 fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
     use_context::<LanguageContext>(cx)
-        .expect("empty `LanguageContext` was provided inside the `App` component")
+        .expect("`LanguageContext` was provided in the `App` component")
         .set_language(cx, lang);
 
     //log!("path: {:?}", use_location(cx).pathname.get());

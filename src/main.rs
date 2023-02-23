@@ -4,7 +4,7 @@ const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     //std::env::set_var("RUST_BACKTRACE", "full");
-    //std::env::set_var("RUST_BACKTRACE", "1");
+    std::env::set_var("RUST_BACKTRACE", "1");
     use shopping_list::app::*;
     fn app(cx: leptos::Scope) -> impl IntoView {
         view! { cx, <App />}
@@ -19,10 +19,10 @@ async fn main() -> std::io::Result<()> {
 
     let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
     let has_certs = ssl_builder
-        .set_private_key_file("privkey16.pem", SslFiletype::PEM)
+        .set_private_key_file("privkey.pem", SslFiletype::PEM)
         .is_ok();
     let has_certs = ssl_builder
-        .set_certificate_chain_file("fullchain16.pem")
+        .set_certificate_chain_file("fullchain.pem")
         .is_ok()
         || has_certs;
 

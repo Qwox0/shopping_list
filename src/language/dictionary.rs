@@ -1,6 +1,7 @@
 use super::Language;
 #[allow(unused_imports)]
 use anyhow::Context;
+use gloo_net::http::Request;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 
@@ -63,9 +64,7 @@ impl Dictionary {
     ///
     /// This will only work during ssr. To fetch a Dictionary from the client use
     /// [`Dictionary::fetch`]
-    pub fn try_from_language(cx: Scope, language: Language) -> anyhow::Result<Self> {
-        crate::util::set_cookie(cx, "language", language);
-
+    pub fn try_from_language(language: Language) -> anyhow::Result<Self> {
         if leptos_dom::is_browser() {
             anyhow::bail!("language files are only available on the server!");
         }
@@ -79,25 +78,17 @@ impl Dictionary {
     /// equivalent to [Dictionary::try_from_language].
     ///
     /// To get a Dictionary nonsynchronously use [Dictionary::try_from_language].
-    pub async fn fetch(cx: Scope, language: Language) -> anyhow::Result<Self> {
+    pub async fn fetch(language: Language) -> anyhow::Result<Self> {
         if leptos_dom::is_server() {
-            Dictionary::try_from_language(cx, language)
+            Dictionary::try_from_language(language)
         } else {
-            crate::util::set_cookie(cx, "language", language);
-            let origin = crate::util::get_html_document()
-                .expect("Document is available on the Client")
-                .location()
-                .expect("location")
-                .origin()
-                .expect("origin");
-            let toml_string = reqwest::Client::builder()
-                .build()?
-                .get(format!("{origin}/language/{}.toml", language.short()))
+            let toml_string = Request::get(&format!("/language/{}.toml", language.short()))
                 .send()
-                .await?
+                .await
+                .context("Language Request failed")?
                 .text()
                 .await
-                .context("failed to get response text.")?;
+                .context("Failed reading response as String")?;
             Dictionary::try_from_toml(toml_string)
         }
     }

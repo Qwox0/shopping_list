@@ -2,41 +2,46 @@ use super::{dictionary::Dictionary, Language};
 use leptos::*;
 
 #[derive(Clone, Debug)]
-pub struct LanguageContext(RwSignal<Option<LanguageContextProps>>);
+pub struct LanguageContext {
+    language: RwSignal<Language>,
+    dictionary: Resource<Language, Dictionary>,
+}
 
 impl LanguageContext {
-    pub fn new_empty(cx: Scope) -> Self {
-        LanguageContext(create_rw_signal(cx, None))
-    }
-
-    pub fn set_language(&self, cx: Scope, lang: Language) {
-        if let Some(a) = self.0.get() {
-            a.language.set(lang);
-        } else {
-            self.set_initial_language(cx, lang)
+    pub fn new(cx: Scope, language: RwSignal<Language>) -> Self {
+        LanguageContext {
+            language,
+            dictionary: create_resource_with_initial_value(
+                // create_local_resource_with_initial_value(
+                cx,
+                language,
+                move |lang| async move {
+                    /* load_dictionary_action(cx, lang) .await .expect("got valid Dictionary") */
+                    Dictionary::fetch(lang)
+                        .await
+                        .expect("able to fetch Dictionary")
+                },
+                Dictionary::try_from_language(language.get()).ok(),
+            ),
         }
     }
 
-    pub fn set_initial_language(&self, cx: Scope, initial_language: Language) {
-        self.0.update(|option| {
-            //let _ = option.insert(LanguageContextProps::new(cx, initial_language));
-            *option = Some(LanguageContextProps::new(cx, initial_language));
-        });
+    pub fn set_language(&self, cx: Scope, lang: Language) {
+        crate::util::set_cookie(cx, "language", lang);
+        self.language.set(lang)
     }
 
     pub fn get_word<F>(&self, cx: Scope, getter: F) -> String
     where
         F: Fn(&crate::language::dictionary::Dictionary) -> String,
     {
-        self.0.with(|props| {
-            props
-                .as_ref()
-                .expect("initial language was set for `LanguageContext`")
-                .get_word(cx, getter)
-        })
+        self.dictionary
+            .with(cx, getter)
+            .unwrap_or("pending".to_string())
     }
 }
 
+/*
 #[derive(Clone, Debug)]
 struct LanguageContextProps {
     language: RwSignal<Language>,
@@ -81,3 +86,4 @@ impl LanguageContextProps {
             .into()
     }
 }
+*/

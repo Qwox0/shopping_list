@@ -18,9 +18,27 @@ pub enum Language {
     German,
 }
 
+impl Language {
+    pub fn short(&self) -> String {
+        match self {
+            Language::English => "en",
+            Language::German => "de",
+        }
+        .to_owned()
+    }
+
+    pub fn from_cookies(cx: Scope) -> Option<Language> {
+        crate::util::get_cookie(cx, "language")
+            .map(|s| Language::try_from(s).ok())
+            .flatten()
+    }
+}
+
+
 impl Default for Language {
     fn default() -> Self {
-        Language::English
+        SITE_DEFAULT_LANGUAGE
+
     }
 }
 
@@ -55,23 +73,6 @@ impl Display for Language {
             Language::English => write!(f, "English"),
             Language::German => write!(f, "Deutsch"),
         }
-    }
-}
-
-impl Language {
-    pub fn short(&self) -> String {
-        match self {
-            Language::English => "en",
-            Language::German => "de",
-        }
-        .to_owned()
-    }
-
-    pub fn from_cookie(cx: Scope) -> Language {
-        crate::util::get_cookie(cx, "language")
-            .map(|s| Language::try_from(s).ok())
-            .flatten()
-            .unwrap_or(SITE_DEFAULT_LANGUAGE)
     }
 }
 
