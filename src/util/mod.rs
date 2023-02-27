@@ -1,5 +1,5 @@
-pub mod local_storage;
 pub mod from_with_scope;
+pub mod local_storage;
 
 use leptos::*;
 use std::fmt::Display;
@@ -40,6 +40,12 @@ pub fn get_html_document() -> Option<web_sys::HtmlDocument> {
         use wasm_bindgen::JsCast;
         return Some(document().unchecked_into::<web_sys::HtmlDocument>());
     }
+}
+
+pub fn is_server_available() -> bool {
+    get_window()
+        .map(|w| w.navigator().on_line())
+        .unwrap_or(true)
 }
 
 /// Returns the value of the (first) cookie with the given name.

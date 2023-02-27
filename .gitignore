@@ -1,5 +1,9 @@
 /target/
 pkg
 **/*.rs.bk
+
 *.pem
+
+/data/*
+!/data/init
 

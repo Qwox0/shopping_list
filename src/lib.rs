@@ -1,12 +1,17 @@
-#![feature(result_flattening)]
 #![allow(unused)]
 
+#![allow(incomplete_features)]
+#![feature(result_flattening)]
+#![feature(async_fn_in_trait)]
 
 pub mod app;
 mod connection_status;
+#[cfg(feature = "ssr")]
+pub mod db;
 mod head;
 mod language;
-mod list;
+pub mod list;
+pub mod state;
 mod util;
 
 cfg_if::cfg_if! {
@@ -18,7 +23,10 @@ cfg_if::cfg_if! {
         #[wasm_bindgen]
         pub fn hydrate() {
             console_error_panic_hook::set_once();
-            mount_to_body(move |cx| view! { cx, <App/> });
+            mount_to_body(move |cx| {
+
+                view! { cx, <App/> }
+            });
         }
     }
 }

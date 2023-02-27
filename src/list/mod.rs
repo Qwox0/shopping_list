@@ -1,5 +1,5 @@
 mod header;
-mod item;
+pub mod item;
 
 use crate::{
     language::text_macro::text,

@@ -2,6 +2,8 @@ use crate::{language::text_macro::text, list::List, util::from_with_scope::FromW
 use display_me::display;
 use leptos::*;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ssr")]
+use sqlx::{query::Query, sqlite::SqliteArguments, QueryBuilder, Sqlite};
 use uuid::Uuid;
 
 #[component]
@@ -60,12 +62,12 @@ pub fn ItemView(cx: Scope, item: Item) -> impl IntoView {
 pub struct Item {
     pub id: Uuid,
     pub name: RwSignal<String>,
-    pub amount: RwSignal<usize>,
+    pub amount: RwSignal<u32>,
     pub state: RwSignal<ItemState>,
 }
 
 impl Item {
-    pub fn new(cx: Scope, name: impl Into<String>, amount: usize, state: ItemState) -> Self {
+    pub fn new(cx: Scope, name: impl Into<String>, amount: u32, state: ItemState) -> Self {
         Item {
             id: Uuid::new_v4(),
             name: create_rw_signal(cx, name.into()),
@@ -101,12 +103,40 @@ impl Item {
 // ------ Serialized -------
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 #[display("{} x{}", name, amount)]
 pub struct ItemSerialized {
-    pub id: Uuid,
+    id: Uuid,
     pub name: String,
-    pub amount: usize,
+    pub amount: u32,
     pub state: ItemState,
+}
+
+#[cfg(feature = "ssr")]
+impl crate::db::InDb for ItemSerialized {
+    const COLUMNS_TUPLE: &'static str = "(id, name, amount, state)";
+
+    fn bind_values<'a>(
+        &self,
+        query_builder: &'a mut QueryBuilder<'a, Sqlite>,
+    ) -> &mut QueryBuilder<'a, Sqlite> {
+        query_builder
+            .push_bind(self.id.clone())
+            .push_bind(self.name.clone())
+            .push_bind(self.amount.clone())
+            .push_bind(self.state.clone())
+    }
+}
+
+impl ItemSerialized {
+    pub fn new(name: impl Into<String>, amount: u32, state: ItemState) -> Self {
+        ItemSerialized {
+            id: Uuid::new_v4(),
+            name: name.into(),
+            amount,
+            state,
+        }
+    }
 }
 
 impl From<&Item> for ItemSerialized {
@@ -121,6 +151,7 @@ impl From<&Item> for ItemSerialized {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::Type))]
 pub enum ItemState {
     Needed,
     Completed,

@@ -5,26 +5,27 @@ const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
 async fn main() -> std::io::Result<()> {
     //std::env::set_var("RUST_BACKTRACE", "full");
     std::env::set_var("RUST_BACKTRACE", "1");
-    use shopping_list::app::*;
-    fn app(cx: leptos::Scope) -> impl IntoView {
-        view! { cx, <App />}
-    }
     use actix_files::Files;
     use actix_web::*;
     use leptos::*;
     use leptos_actix::{generate_route_list, LeptosRoutes};
-    use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+    use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
+    use shopping_list::app::*;
+
+    fn app(cx: leptos::Scope) -> impl IntoView {
+        view! { cx, <App />}
+    }
+
+    fn get_ssl_builder() -> anyhow::Result<SslAcceptorBuilder> {
+        let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
+        ssl_builder.set_private_key_file("privkey.pem", SslFiletype::PEM)?;
+        ssl_builder.set_certificate_chain_file("fullchain.pem")?;
+        Ok(ssl_builder)
+    }
 
     register_server_functions();
 
-    let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
-    let has_certs = ssl_builder
-        .set_private_key_file("privkey.pem", SslFiletype::PEM)
-        .is_ok();
-    let has_certs = ssl_builder
-        .set_certificate_chain_file("fullchain.pem")
-        .is_ok()
-        || has_certs;
+    let ssl_builder = get_ssl_builder().ok();
 
     let conf = get_configuration(Some("./Cargo.toml")).await.unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -34,19 +35,21 @@ async fn main() -> std::io::Result<()> {
         let leptos_options = &conf.leptos_options;
         let routes = generate_route_list(app);
         App::new()
+            .wrap(middleware::Compress::default())
             .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
             .leptos_routes(leptos_options.clone(), routes, app)
             .service(Files::new("/", &leptos_options.site_root))
-            .wrap(middleware::Compress::default())
     })
     .bind(&addr)?;
     log!("bind {}", &addr);
-    log!("do ssl certificates exist?: {}", has_certs);
-    let server = if has_certs {
+    let server = if let Some(ssl_builder) = ssl_builder {
         log!("bind {}", SOCKET_ADDRESS);
         server.bind_openssl(SOCKET_ADDRESS, ssl_builder)?
     } else {
         server
     };
+
+    shopping_list::db::test_db().await;
+
     server.run().await
 }

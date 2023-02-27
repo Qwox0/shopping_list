@@ -13,7 +13,7 @@ console_error_panic_hook = "0.1"
 console_log = "0.2"
 cfg-if = "1"
 leptos = { git = "https://github.com/leptos-rs/leptos", default-features = false, features = [
-  "serde",
+    "serde",
 ] }
 leptos_meta = { git = "https://github.com/leptos-rs/leptos", default-features = false }
 leptos_actix = { git = "https://github.com/leptos-rs/leptos", optional = true }
@@ -31,15 +31,15 @@ web-sys = { version = "0.3.60", features = ["Navigator", "Storage", "Window", "H
 uuid = { version = "1.2.2", features = ["v4", "js", "serde"] }
 display_me = { git = "https://github.com/Qwox0/display_me", version = "0.1.0" }
 gloo-net = "0.2.6"
+sqlx = { version = "0.6.2", features = ["runtime-actix-native-tls", "sqlite", "uuid"], optional = true }
+futures = "0.3.26"
 #reqwest = { version = "0.11", features = ["json"] }
 #reqwasm = "0.5.0"
 
 [features]
 default = ["ssr"]
-# used for frontend:
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
-# used for server:
-ssr = ["dep:actix-files", "dep:actix-web", "dep:leptos_actix", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "openssl"]
+ssr = ["dep:actix-files", "dep:actix-web", "dep:leptos_actix", "dep:sqlx", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "openssl"]
 
 [package.metadata.leptos]
 output-name = "shopping_list"

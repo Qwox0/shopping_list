@@ -32,7 +32,7 @@ pub fn ListHeader(cx: Scope) -> impl IntoView {
                 <input type="number"
                     class="new-item-amount"
                     placeholder=text!(cx, |d| format!("{} ({}: 1)", d.list_header.amount, d.default_))
-                    on:input=move |e| set_new_item_amount.set(event_target_value(&e).parse::<usize>().unwrap_or(1))
+                    on:input=move |e| set_new_item_amount.set(event_target_value(&e).parse::<u32>().unwrap_or(1))
                 />
                 <input type="button"
                     class="new-item-button"
