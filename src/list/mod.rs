@@ -7,7 +7,7 @@ use crate::{
         header::{ListHeader, ListHeaderProps},
         item::{ItemView, ItemViewProps},
     },
-    util::{from_with_scope::FromWithScope, local_storage::InLocalStorage},
+    util::{FromWithScope, InLocalStorage},
 };
 use anyhow::Context;
 use item::*;

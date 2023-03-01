@@ -34,11 +34,9 @@ impl Language {
     }
 }
 
-
 impl Default for Language {
     fn default() -> Self {
         SITE_DEFAULT_LANGUAGE
-
     }
 }
 
@@ -95,14 +93,13 @@ pub(crate) mod text_macro {
             let cx: ::leptos::Scope = $cx;
             let lang_context = use_context::<crate::language::context::LanguageContext>(cx)
                 .expect("`LanguageContext` is available");
-            move || { format!("{}", lang_context.get_word(cx, $getter)) }
-        }};
-        /*
-        ( $lang_context:ident -> $getter:expr ) => {{
-            let lang_context: crate::language::context::LanguageContext = $lang_context;
-            move || { format!("{}", lang_context.get_word(cx, $getter)) }
-        }};
-        */
+            move || format!("{}", lang_context.get_word(cx, $getter))
+        }}; /*
+            ( $lang_context:ident -> $getter:expr ) => {{
+                let lang_context: crate::language::context::LanguageContext = $lang_context;
+                move || { format!("{}", lang_context.get_word(cx, $getter)) }
+            }};
+            */
     }
     pub(crate) use text;
 }

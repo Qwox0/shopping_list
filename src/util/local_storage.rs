@@ -1,4 +1,4 @@
-use crate::util::from_with_scope::FromWithScope;
+use crate::util::FromWithScope;
 use anyhow::Context;
 use leptos::*;
 use serde::{de::DeserializeOwned, Serialize};

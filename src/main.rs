@@ -25,8 +25,6 @@ async fn main() -> std::io::Result<()> {
 
     register_server_functions();
 
-    let ssl_builder = get_ssl_builder().ok();
-
     let conf = get_configuration(Some("./Cargo.toml")).await.unwrap();
     let addr = conf.leptos_options.site_addr;
     // Generate the list of routes in your Leptos App
@@ -41,15 +39,13 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/", &leptos_options.site_root))
     })
     .bind(&addr)?;
-    log!("bind {}", &addr);
-    let server = if let Some(ssl_builder) = ssl_builder {
+    log!("bind {} with ssl", &addr);
+    if let Some(ssl_builder) = get_ssl_builder().ok() {
         log!("bind {}", SOCKET_ADDRESS);
         server.bind_openssl(SOCKET_ADDRESS, ssl_builder)?
     } else {
         server
-    };
-
-    shopping_list::db::test_db().await;
-
-    server.run().await
+    }
+    .run()
+    .await
 }

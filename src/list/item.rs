@@ -1,4 +1,4 @@
-use crate::{language::text_macro::text, list::List, util::from_with_scope::FromWithScope};
+use crate::{language::text_macro::text, list::List, util::FromWithScope};
 use display_me::display;
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -106,12 +106,13 @@ impl Item {
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 #[display("{} x{}", name, amount)]
 pub struct ItemSerialized {
-    id: Uuid,
+    pub id: Uuid,
     pub name: String,
     pub amount: u32,
     pub state: ItemState,
 }
 
+/*
 #[cfg(feature = "ssr")]
 impl crate::db::InDb for ItemSerialized {
     const COLUMNS_TUPLE: &'static str = "(id, name, amount, state)";
@@ -127,6 +128,7 @@ impl crate::db::InDb for ItemSerialized {
             .push_bind(self.state.clone())
     }
 }
+*/
 
 impl ItemSerialized {
     pub fn new(name: impl Into<String>, amount: u32, state: ItemState) -> Self {

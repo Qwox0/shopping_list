@@ -1,32 +1,31 @@
 #![allow(unused)]
-
 #![allow(incomplete_features)]
 #![feature(result_flattening)]
 #![feature(async_fn_in_trait)]
 
 pub mod app;
-mod connection_status;
+pub mod connection_status;
 #[cfg(feature = "ssr")]
 pub mod db;
-mod head;
-mod language;
+pub mod head;
+pub mod language;
 pub mod list;
 pub mod state;
-mod util;
+pub mod util;
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "hydrate")] {
-        use app::*;
-        use leptos::*;
-        use wasm_bindgen::prelude::wasm_bindgen;
+#[cfg(feature = "hydrate")]
+//#[cfg_attr(feature = "hydrate", wasm_bindgen::prelude::wasm_bindgen)]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn hydrate() {
+    use app::*;
+    use leptos::*;
+    use state::render_state::RenderState;
+    console_error_panic_hook::set_once();
 
-        #[wasm_bindgen]
-        pub fn hydrate() {
-            console_error_panic_hook::set_once();
-            mount_to_body(move |cx| {
+    mount_to_body(move |cx| {
+        let render_state: &'static RenderState = Box::leak(Box::new(RenderState::new(cx)));
+        provide_context::<&'static RenderState>(cx, render_state);
 
-                view! { cx, <App/> }
-            });
-        }
-    }
+        view! { cx, <App/> }
+    });
 }
