@@ -6,13 +6,11 @@ use sqlx::{
     sqlite::{SqliteArguments, SqliteRow},
     Connection, FromRow, QueryBuilder, Sqlite, SqliteConnection,
 };
-use std::marker::PhantomData;
 
+/*
 pub trait InDb: Sized + for<'r> FromRow<'r, SqliteRow> + Send + Unpin {
-    const DB_URL: &'static str;
-    const TABLE_NAME: &'static str;
     const COLUMNS_TUPLE: &'static str;
-
+    //fn bind_values<'a>(&self, query: Query<'a, Sqlite, SqliteArguments<'a>>) -> Query<'a, Sqlite, SqliteArguments<'a>>;
     fn bind_values<'a>(
         &self,
         query_builder: &'a mut QueryBuilder<'a, Sqlite>,
@@ -27,9 +25,9 @@ pub trait InDb: Sized + for<'r> FromRow<'r, SqliteRow> + Send + Unpin {
         format!("({})", fmt)
     }
 
-    async fn select_all(connection: &mut SqliteConnection) -> Vec<Self> {
+    async fn select_all(table_name: &'static str, connection: &mut SqliteConnection) -> Vec<Self> {
         let mut vec = vec![];
-        let mut query_builder = QueryBuilder::new(format!("SELECT * FROM {}", Self::TABLE_NAME));
+        let mut query_builder = QueryBuilder::new(format!("SELECT * FROM {}", table_name));
         let mut rows = query_builder.build_query_as::<Self>().fetch(connection);
         while let Some(row) = rows.try_next().await.unwrap() {
             vec.push(row);
@@ -39,13 +37,13 @@ pub trait InDb: Sized + for<'r> FromRow<'r, SqliteRow> + Send + Unpin {
 
     async fn insert(
         &self,
+        table_name: &'static str,
         connection: &mut SqliteConnection,
     ) -> sqlx::Result<sqlx::sqlite::SqliteQueryResult> {
+        let columns = Self::COLUMNS_TUPLE;
         let values_fmt = self.query_value_fmt();
         let mut query_builder = QueryBuilder::new(format!(
-            "INSERT INTO {} {} VALUES {values_fmt}",
-            Self::TABLE_NAME,
-            Self::COLUMNS_TUPLE
+            "INSERT INTO {table_name} {columns} VALUES {values_fmt}"
         ));
         self.bind_values(&mut query_builder)
             .build()
@@ -58,21 +56,18 @@ pub trait InDb: Sized + for<'r> FromRow<'r, SqliteRow> + Send + Unpin {
         */
     }
 }
+*/
 
-pub struct ItemsDbTable<T>
-where
-    T: for<'a> FromRow<'a, SqliteRow> + InDb + Send + Unpin + std::fmt::Debug,
-{
+const ITEMS_DB_URL: &str = "sqlite:./data/ShoppingList.db";
+const ITEMS_TABLE_NAME: &str = "items";
+
+pub struct ItemsDbTable {
     db_url: &'static str,
     table_name: &'static str,
     connection: SqliteConnection,
-    row_type: PhantomData<T>,
 }
 
-impl<T> ItemsDbTable<T>
-where
-    T: for<'a> FromRow<'a, SqliteRow> + InDb + Send + Unpin + std::fmt::Debug,
-{
+impl ItemsDbTable {
     pub async fn new() -> Result<Self, anyhow::Error> {
         Ok(ItemsDbTable {
             db_url: ITEMS_DB_URL,
@@ -81,31 +76,43 @@ where
                 .await
                 .map_err(anyhow::Error::from)
                 .context("Failed to connect to db")?,
-            row_type: PhantomData,
         })
     }
 
-    pub async fn get_all(&mut self) -> anyhow::Result<Vec<T>> {
+    pub async fn get_all(&mut self, cx: leptos::Scope) -> anyhow::Result<Vec<ItemSerialized>> {
         let mut items = Vec::new();
         let query = format!("SELECT * FROM {}", self.table_name);
-        let mut rows = sqlx::query_as::<_, T>(&query).fetch(&mut self.connection);
+        let mut rows = sqlx::query_as::<_, ItemSerialized>(&query).fetch(&mut self.connection);
         while let Some(row) = rows.try_next().await.unwrap() {
             items.push(row);
         }
         Ok(items)
     }
 
-    pub async fn add_row(&mut self, row: T) -> anyhow::Result<()> {
-        row.insert(self.table_name, &mut self.connection).await?;
+    pub async fn add_row(&mut self, row: ItemSerialized) -> anyhow::Result<()> {
+        let query = format!(
+            "INSERT INTO {} (id, name, amount, state) VALUES (?, ?, ?, ?)",
+            self.table_name
+        );
+        QueryBuilder::new(query)
+            .push_bind(row.id.clone())
+            .push_bind(row.name.clone())
+            .push_bind(row.amount.clone())
+            .push_bind(row.state.clone())
+            .build()
+            .execute(&mut self.connection)
+            .await?;
         Ok(())
     }
 
+    /*
     pub async fn add(&mut self, iter: impl Iterator<Item = T>) -> anyhow::Result<()> {
         for row in iter {
             self.add_row(row).await?
         }
         Ok(())
     }
+    */
 }
 
 pub async fn connect_db(url: &'static str) -> Result<SqliteConnection, anyhow::Error> {
@@ -113,17 +120,4 @@ pub async fn connect_db(url: &'static str) -> Result<SqliteConnection, anyhow::E
         .await
         .map_err(anyhow::Error::from)
         .context("Failed to connect to db")
-}
-
-pub async fn test_db() {
-    let mut table: ItemsDbTable<ItemSerialized> = ItemsDbTable::new().await.expect("got db");
-    /*
-    table.add_row(ItemSerialized::new(
-        "TestA",
-        5,
-        crate::list::item::ItemState::Needed,
-    )).await.expect("added row");
-    */
-    let items = table.get_all().await.expect("got items");
-    println!("items: {:?}", items);
 }

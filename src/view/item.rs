@@ -81,7 +81,7 @@ impl Item {
     }
 
     /// Clone Item from new_item and decouple Signals.
-    pub fn from_new_item(cx: Scope, new_item: Item) -> Self {
+    pub fn from_new_item(cx: Scope, new_item: &Item) -> Self {
         Item::new(
             cx,
             new_item.name.get(),
@@ -97,6 +97,10 @@ impl Item {
             amount: create_rw_signal(cx, serialized.amount),
             state: create_rw_signal(cx, serialized.state),
         }
+    }
+
+    pub fn from_serialized_ref(cx: Scope, serialized: &ItemSerialized) -> Self {
+        Item::from_serialized(cx, serialized.clone())
     }
 }
 

@@ -12,6 +12,21 @@ use std::fmt::Display;
 
 // Extend leptos
 
+pub fn err_fallback(cx: Scope, errors: RwSignal<Errors>) -> impl IntoView {
+    view! { cx,
+        <div class="error">
+            <h1>"Something went wrong."</h1>
+            <ul>
+            {move || errors.get()
+                .into_iter()
+                .map(|(_, error)| view! { cx, <li>{error.to_string()} </li> })
+                .collect::<Vec<_>>()
+            }
+            </ul>
+        </div>
+    }
+}
+
 /// Returns the [`web_sys::Window`] Object if on the Client.
 /// During SSR this returns [`None`]
 pub fn get_window() -> Option<web_sys::Window> {

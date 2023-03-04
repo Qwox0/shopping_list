@@ -47,7 +47,8 @@ site-root = "target/site"
 site-pkg-dir = "pkg"
 env = "DEV" # The environment Leptos will run in, usually either "DEV" or "PROD"
 site-addr = "127.0.0.1:3000" # In this Template this is used for dev only! See main.rs
-reload-port = 3001 # The port to use for automatic reload monitoring
+#reload-port = 3001 # The port to use for automatic reload monitoring
+reload-port = 33081 # The port to use for automatic reload monitoring
 
 style-file = "style/main.scss"
 assets-dir = "assets" # Assets source dir. All files found here will be copied and synchronized to site-root. The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir. Optional. Env: LEPTOS_ASSETS_DIR.

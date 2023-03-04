@@ -1,15 +1,22 @@
 #[cfg(feature = "ssr")]
 use crate::db::ItemsDbTable;
-use crate::list::item::{Item, ItemSerialized};
+use crate::{
+    language::context::LanguageContext,
+    list::{
+        item::{Item, ItemSerialized},
+        ItemList,
+    },
+};
 use leptos::*;
 
-pub struct RenderState {
-    pub item_list: RwSignal<Vec<Item>>,
+pub struct AppState {
+    //pub language: LanguageContext,
+    pub item_list: ItemList,
 }
 
-impl RenderState {
-    pub fn new(cx: Scope) -> RenderState {
-        RenderState {
+impl AppState {
+    pub fn new(cx: Scope) -> AppState {
+        AppState {
             //item_list: create_rw_signal(cx, RenderState::init_item_list(cx)),
             item_list: create_rw_signal(cx, vec![]),
         }

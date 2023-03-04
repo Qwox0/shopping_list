@@ -1,5 +1,4 @@
 mod header;
-pub mod item;
 
 use crate::{
     language::text_macro::text,
@@ -17,46 +16,153 @@ use uuid::Uuid;
 
 const LIST_STORAGE_KEY: &str = "shopping-list-items";
 
-#[component]
-pub fn ListView(cx: Scope) -> impl IntoView {
-    /*
-    let (list, set_list) = create_signal(
-        cx,
-        List::try_from_local_storage(cx).unwrap_or(List::empty()),
-    );
-    */
-    let list = List::new(cx);
-    provide_context(cx, list);
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ListMsg {
+    Get(usize), // serde_urlencoded only supports Strings
+    GetAll,
+}
 
-    view! { cx, <p>"hello"</p>}
+#[server(GetItemList, "/api", "Cbor")] // Cbor: + smaller + allows for enums with non String values - needs wasm even in forms
+pub async fn get_item_list(cx: Scope, msg: ListMsg) -> Result<Vec<ItemSerialized>, ServerFnError> {
+    log!("msg: {:?}", msg);
+    let list = crate::db::ItemsDbTable::new()
+        .await
+        .expect("got db")
+        .get_all(cx)
+        .await
+        .expect("got items");
+    let list = match msg {
+        ListMsg::Get(count) => list.into_iter().take(count).collect(),
+        ListMsg::GetAll => list,
+    };
+    log!("request list: {:?}", list);
+    std::thread::sleep(std::time::Duration::from_millis(1000));
+    Ok(list)
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ItemList {
+    list: Resource<ListMsg, Result<Vec<ItemSerialized>, ServerFnError>>,
+    message: RwSignal<ListMsg>,
+}
+
+impl ItemList {
+    pub fn new(cx: Scope, init_msg: ListMsg) -> Self {
+        let message = create_rw_signal(cx, init_msg);
+        let list = create_resource(cx, message, move |msg| get_item_list(cx, msg));
+        ItemList { list, message }
+    }
+
+    pub fn read(&self, cx: Scope) -> Option<Result<Vec<ItemSerialized>, ServerFnError>> {
+        self.list.read(cx)
+    }
+
+    pub fn with<U>(
+        &self,
+        cx: Scope,
+        f: impl FnOnce(&Result<Vec<ItemSerialized>, ServerFnError>) -> U,
+    ) -> Option<U> {
+        self.list.with(cx, f)
+    }
+
+    pub fn read2(&self, cx: Scope) -> Option<Result<Vec<Item>, ServerFnError>> {
+        let deserialize_list = |list: &Vec<ItemSerialized>| {
+            list.iter().map(|i| Item::from_serialized_ref(cx, i)).collect()
+        };
+        self.list.with(cx, |serialized| {
+            serialized
+                .as_ref()
+                .map(deserialize_list)
+                .map_err(ToOwned::to_owned)
+        })
+    }
+
+    pub fn send_msg(&self, msg: ListMsg) {
+        self.message.set(msg)
+    }
+}
+
+#[component]
+pub fn List(cx: Scope) -> impl IntoView {
+    let list = ItemList::new(cx, ListMsg::Get(0));
     /*
-    let items = move || {
+    let items_view = move |items: Vec<Item>| {
         view! { cx,
-            <For each=move || list.0.get().into_iter().rev() //move || list.with(|l| l.items.clone())
-                key=|item| item.id
-                view=move |cx, item| view! { cx,
-                    <li> <ItemView item/> </li>
-                }
-            />
+            <ul class="items">
+                <For each=move || items.into_iter().rev() //move || list.with(|l| l.items.clone())
+                    key=|item| item.id
+                    view=move |cx, item| view! { cx,
+                        <li> <ItemView item/> </li>
+                    }
+                />
+            </ul>
+        }
+    };
+    let res_view = move |res: Result<Vec<Item>, ServerFnError>| {
+        view! { cx,
+            <ErrorBoundary fallback=crate::util::err_fallback>
+                { move || res.map(items_view) }
+            </ErrorBoundary>
         }
     };
 
-    view! {cx,
+    let list_view = move || list.read2(cx).map(res_view);
+    */
+    let fallback = move || match list.read2(cx) {
+        Some(l) => view! { cx, <><p>{ move || format!("Some({:?})", l) }</p></> }, //view! { cx, <>{ move || res_view(l) }</> },
+        None => view! { cx, <><p>"Loading (Suspense Fallback)..."</p></> },
+    };
+
+    let l = move |cx: Scope, l: &Vec<ItemSerialized>| {
+        l.iter()
+            .rev()
+            .map(move |a| Item::from_serialized(cx, a.clone()))
+            .collect::<Vec<Item>>()
+    };
+
+    view! { cx,
         <section class="shopping-list">
             <ListHeader/>
-            <ul class="items">
-                {items}
-            </ul>
-
-            /*
-            <input type="button"
-                value="Debug"
-                on:click=move |_| {
-                    log!("{:?}", list().iter().map(|i| format!("{:?}", i)).collect::<Vec<_>>());
-                }
-            />
-            */
+            <Suspense fallback>
+                //{ list_view }
+                <ErrorBoundary fallback=crate::util::err_fallback>
+                    { move || list.with(cx, move |res| {
+                        res.clone().map(|items| {
+                            view! { cx,
+                                <ul class="items">
+                                    /*
+                                    { move || items.iter().rev().map(|item| {
+                                        view! { cx,
+                                            <li> <ItemView item=Item::from_serialized(cx, item)/> </li>
+                                        }
+                                    })}
+                                    */
+                                    //<For each=move || items.iter().rev() //move || list.with(|l| l.items.clone())
+                                    <For each=move || l(cx, &items)
+                                        key=|item| item.id
+                                        view=move |cx, item| view! { cx,
+                                            <li> <ItemView item/> </li>
+                                        }
+                                    />
+                                </ul>
+                            }
+                        })
+                    }) }
+                </ErrorBoundary>
+            </Suspense>
         </section>
+        <div>
+            <input type="number"
+                on:change=move |e| list.send_msg(ListMsg::Get(event_target_value(&e).parse::<usize>().unwrap_or(1)))
+            />
+            <Suspense fallback>
+                <p>{ move || format!("{:?}", list.read(cx)) }</p>
+            </Suspense>
+        </div>
+    }
+    /*
+
+    view! {cx,
     }
         */
 }
@@ -127,7 +233,7 @@ impl List {
     }
 
     pub fn add_new_item(&mut self, cx: Scope, new_item: Item) {
-        self.add(Item::from_new_item(cx, new_item))
+        self.add(Item::from_new_item(cx, &new_item))
     }
 
     pub fn remove(&mut self, id: Uuid) {
