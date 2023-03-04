@@ -1,6 +1,6 @@
+use crate::util::get_html_document;
 use leptos::*;
 use std::fmt::Display;
-use super::get_html_document;
 
 /// Returns the value of the (first) cookie with the given name.
 /// During SSR this checks the Request Cookies

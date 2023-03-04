@@ -8,7 +8,6 @@ pub use local_storage::*;
 pub use signals::*;
 
 use leptos::*;
-use std::fmt::Display;
 
 // Extend leptos
 

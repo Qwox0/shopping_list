@@ -1,8 +1,8 @@
-pub mod context;
-pub mod dictionary;
+mod context;
+mod dictionary;
+pub use context::*;
+pub use dictionary::*;
 
-use self::dictionary::Dictionary;
-use self::text_macro::text;
 use anyhow::anyhow;
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -71,46 +71,5 @@ impl Display for Language {
             Language::English => write!(f, "English"),
             Language::German => write!(f, "Deutsch"),
         }
-    }
-}
-
-/// prevent multiple definitions of text
-pub(crate) mod text_macro {
-    /// get Text in the currently selected language
-    /// For displaying text inside the [leptos::view] macro, use the [crate::language::Text] component instead!
-    ///
-    /// ( $cx, $getter ) => { ... } -> (|| -> String)
-    /// ( $lang_context -> $getter ) => { ... } -> (|| -> String)
-    ///
-    /// # Types
-    ///
-    /// $cx: [leptos::Scope]
-    /// $lang_context: [crate::language::context::LanguageContext]
-    /// $getter: FnOnce(&Dictionary) -> &T
-    /// [crate::language::dictionary::Dictionary]
-    macro_rules! text {
-        ( $cx:ident, $getter:expr ) => {{
-            let cx: ::leptos::Scope = $cx;
-            let lang_context = use_context::<crate::language::context::LanguageContext>(cx)
-                .expect("`LanguageContext` is available");
-            move || format!("{}", lang_context.get_word(cx, $getter))
-        }}; /*
-            ( $lang_context:ident -> $getter:expr ) => {{
-                let lang_context: crate::language::context::LanguageContext = $lang_context;
-                move || { format!("{}", lang_context.get_word(cx, $getter)) }
-            }};
-            */
-    }
-    pub(crate) use text;
-}
-
-/// write Text in the currently selected language
-#[component]
-pub fn Text<F>(cx: Scope, getter: F) -> impl IntoView
-where
-    F: Fn(&Dictionary) -> String + 'static,
-{
-    view! { cx,
-        <span> { text!(cx, &getter) } </span>
     }
 }

@@ -8,7 +8,8 @@ pub struct LanguageContext {
 }
 
 impl LanguageContext {
-    pub fn new(cx: Scope, language: RwSignal<Language>) -> Self {
+    pub fn new(cx: Scope) -> Self {
+        let language = create_rw_signal(cx, Language::from_cookies(cx).unwrap_or_default());
         LanguageContext {
             language,
             dictionary: create_resource_with_initial_value(
@@ -26,14 +27,18 @@ impl LanguageContext {
         }
     }
 
-    pub fn set_language(&self, cx: Scope, lang: Language) {
+    pub fn set_lang(&self, cx: Scope, lang: Language) {
         crate::util::set_cookie(cx, "language", lang);
         self.language.set(lang)
     }
 
-    pub fn get_word<F>(&self, cx: Scope, getter: F) -> String
+    pub fn get_lang(&self) -> Language {
+        self.language.get()
+    }
+
+    pub fn get_text<F>(&self, cx: Scope, getter: F) -> String
     where
-        F: Fn(&crate::language::dictionary::Dictionary) -> String,
+        F: Fn(&crate::state::language::Dictionary) -> String,
     {
         self.dictionary
             .with(cx, getter)

@@ -1,18 +1,16 @@
-use crate::util::ReadSignalUtils;
 use crate::{
-    language::text_macro::text,
-    list::{
-        item::Item,
+    state::{app_state::AppState, item::Item},
+    view::{
         item::{ItemView, ItemViewProps},
-        List,
-       // SetShoppingListAction,
+        text::text,
     },
 };
 use leptos::*;
 
 #[component]
 pub fn ListHeader(cx: Scope) -> impl IntoView {
-    let mut list: List = use_context(cx).expect("`List` is available");
+    //let mut list: List = use_context(cx).expect("`List` is available");
+    let list = AppState::from_context(cx).item_list;
 
     let (new_item, set_new_item) = create_signal(cx, Item::empty(cx));
     let (new_item_name, set_new_item_name) = new_item().name.split();

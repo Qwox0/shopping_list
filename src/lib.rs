@@ -4,8 +4,8 @@
 #![feature(async_fn_in_trait)]
 
 pub mod state;
-pub mod view;
 pub mod util;
+pub mod view;
 
 /*
 pub mod app;
@@ -22,15 +22,6 @@ pub mod state;
 //#[cfg_attr(feature = "hydrate", wasm_bindgen::prelude::wasm_bindgen)]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {
-    use view::app::*;
-    use leptos::*;
-    use state::render_state::AppState;
     console_error_panic_hook::set_once();
-
-    mount_to_body(move |cx| {
-        let render_state: &'static AppState = Box::leak(Box::new(AppState::new(cx)));
-        provide_context::<&'static AppState>(cx, render_state);
-
-        view! { cx, <App/> }
-    });
+    leptos::mount_to_body(crate::view::app::app);
 }

@@ -1,23 +1,22 @@
-use crate::head::{SiteHead, SiteHeadProps};
-use crate::list::item::ItemSerialized;
 use crate::{
-    connection_status::*,
-    language::{context::LanguageContext, *},
-    list::{GetItemList, ListView, ListViewProps},
+    state::{app_state::AppState, language::Language},
+    view::{
+        connection_status::*,
+        head::{SiteHead, SiteHeadProps},
+        list::{List, ListProps},
+        text::{Text, TextProps},
+    },
 };
-use anyhow::Context;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "ssr")]
-pub fn register_server_functions() {
-    //_ = SetLanguage::register();
-    //_ = crate::language::dictionary::LoadDictionary::register();
-    GetItemList::register().expect("could register server fn");
-    //GetItemList2::register().expect("could register server fn");
-    a
+pub fn app(cx: Scope) -> impl IntoView {
+    // global state
+    let render_state: &'static AppState = Box::leak(Box::new(AppState::new(cx)));
+    provide_context::<&'static AppState>(cx, render_state);
+
+    view! { cx, <App />}
 }
 
 #[component]
@@ -27,8 +26,14 @@ pub fn App(cx: Scope) -> impl IntoView {
 
     // provide language text to all components (use <Text /> or text!())
     // the initial language still has to be set!
-    let language = create_rw_signal(cx, Language::from_cookies(cx).unwrap_or_default());
-    provide_context(cx, LanguageContext::new(cx, language));
+    //let language = create_rw_signal(cx, Language::from_cookies(cx).unwrap_or_default());
+    //provide_context(cx, LanguageContext::new(cx, language));
+
+    let language = move || AppState::from_context(cx).language.get_lang();
+
+    create_effect(cx, move |_| {
+        log!("test:{:?}", AppState::from_context(cx).item_list.read(cx))
+    });
 
     view! { cx,
         <SiteHead />
@@ -42,7 +47,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                     <Route path="/de" view=|cx| view! { cx, <HomePage lang=Language::German/> } ssr=SsrMode::Async /> // or InOrder; OutOfOrder shows Loading
                     <Route path="/en" view=|cx| view! { cx, <HomePage lang=Language::English/> } ssr=SsrMode::InOrder />
 
-                    <Route path="" view=move |cx| view! { cx, <Redirect path=language.get().short() /> }/>
+                    <Route path="" view=move |cx| view! { cx, <Redirect path=language().short() /> }/>
                 </Routes>
             </main>
         </Router>
@@ -52,9 +57,7 @@ pub fn App(cx: Scope) -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
-    use_context::<LanguageContext>(cx)
-        .expect("`LanguageContext` was provided in the `App` component")
-        .set_language(cx, lang);
+    AppState::from_context(cx).language.set_lang(cx, lang);
 
     //log!("path: {:?}", use_location(cx).pathname.get());
 
@@ -65,7 +68,7 @@ fn HomePage(cx: Scope, lang: Language) -> impl IntoView {
         </header>
         <main>
             <h1> <Text getter=|d| d.shopping_list.clone()/> </h1>
-            <ListView/>
+            <List/>
         </main>
         <Test/>
     }

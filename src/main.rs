@@ -10,11 +10,7 @@ async fn main() -> std::io::Result<()> {
     use leptos::*;
     use leptos_actix::{generate_route_list, LeptosRoutes};
     use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
-    use shopping_list::app::*;
-
-    fn app(cx: leptos::Scope) -> impl IntoView {
-        view! { cx, <App />}
-    }
+    use shopping_list::view::app::app;
 
     fn get_ssl_builder() -> anyhow::Result<SslAcceptorBuilder> {
         let mut ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls())?;
@@ -23,7 +19,7 @@ async fn main() -> std::io::Result<()> {
         Ok(ssl_builder)
     }
 
-    register_server_functions();
+    shopping_list::state::register_server_functions();
 
     let conf = get_configuration(Some("./Cargo.toml")).await.unwrap();
     let addr = conf.leptos_options.site_addr;
