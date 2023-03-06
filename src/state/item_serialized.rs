@@ -4,7 +4,7 @@ use leptos::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 #[display("{} x{}", name, amount)]
 pub struct ItemSerialized {
@@ -40,6 +40,10 @@ impl ItemSerialized {
             amount,
             state,
         }
+    }
+
+    pub fn new_with_item(item: &Item) -> Self {
+        Self::new(item.name.get(), item.amount.get(), item.state.get())
     }
 }
 

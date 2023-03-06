@@ -2110,6 +2110,7 @@ dependencies = [
  "console_log",
  "display_me",
  "futures 0.3.26",
+ "futures-util",
  "gloo-net",
  "leptos",
  "leptos_actix",

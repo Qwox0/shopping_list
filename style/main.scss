@@ -60,17 +60,19 @@ div.item {
 
         > input {
             aspect-ratio : 1 / 1;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            margin-left: 5px;
+            background-color: buttonface;
+            padding: 5px 5px;
+            border: 2px outset buttonborder;
+            border-radius: 30%;
+
+            &:not([always_shown]) {
+                opacity: 0%;
+            }
         }
-    }
-    > div.buttons > input {
-        opacity: 0%;
-        width: 50px;
-        height: 50px;
-        margin-left: 5px;
-        background-color: buttonface;
-        padding: 5px 5px;
-        border: 2px outset buttonborder;
-        border-radius: 30%;
     }
     &:hover > div.buttons > input {
         opacity: 100%;

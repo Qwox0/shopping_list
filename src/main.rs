@@ -1,4 +1,4 @@
-const SOCKET_ADDRESS: &str = "0.0.0.0:33080";
+const PORT: u16 = 33080;
 
 #[cfg(feature = "ssr")]
 #[actix_web::main]
@@ -6,7 +6,8 @@ async fn main() -> std::io::Result<()> {
     //std::env::set_var("RUST_BACKTRACE", "full");
     std::env::set_var("RUST_BACKTRACE", "1");
     use actix_files::Files;
-    use actix_web::*;
+    use actix_web::{dev::Service, *};
+    use futures_util::future::{self, Either};
     use leptos::*;
     use leptos_actix::{generate_route_list, LeptosRoutes};
     use openssl::ssl::{SslAcceptor, SslAcceptorBuilder, SslFiletype, SslMethod};
@@ -29,16 +30,50 @@ async fn main() -> std::io::Result<()> {
         let leptos_options = &conf.leptos_options;
         let routes = generate_route_list(app);
         App::new()
+            .wrap_fn(move |sreq, srv| {
+                let host = sreq.connection_info().host().to_owned();
+                let uri = sreq.uri().to_owned();
+                let url = format!("https://{host}{uri}");
+
+                // If the scheme is "https" then it will let other services below this wrap_fn
+                // handle the request and if it's "http" then a response with redirect status code
+                // will be sent whose "location" header will be same as before, with just "http"
+                // changed to "https"
+                /*
+                log!("host: {host:?}");
+                log!("uri: {uri:?}");
+                log!("uri.to_string(): {:?}", uri.to_string());
+                log!("url: {url:?}");
+                log!("url.to_string(): {:?}", url.to_string());
+                log!("port: {:?}", addr.port());
+                log!("contains: {:?}", uri.to_string().contains(&format!(":{}", addr.port())));
+                log!("contains2: {:?}", url.to_string().contains(&format!(":{}", addr.port())));
+                */
+
+                if sreq.connection_info().scheme() == "https" || url.to_string().contains(&format!(":{}", addr.port())) {
+                    Either::Left(srv.call(sreq)) //.map(|res| res))
+                } else {
+                    println!("An http request has arrived here, i will redirect it to use https");
+                    return Either::Right(future::ready(Ok(sreq.into_response(
+                        HttpResponse::MovedPermanently()
+                            .append_header((http::header::LOCATION, url))
+                            .finish(),
+                    ))));
+                }
+            })
             .wrap(middleware::Compress::default())
             .route("/api/{tail:.*}", leptos_actix::handle_server_fns())
             .leptos_routes(leptos_options.clone(), routes, app)
             .service(Files::new("/", &leptos_options.site_root))
     })
-    .bind(&addr)?;
-    log!("bind {} with ssl", &addr);
+    .bind(&addr)?; // for test only
+    log!("bind: {}", addr);
     if let Some(ssl_builder) = get_ssl_builder().ok() {
-        log!("bind {}", SOCKET_ADDRESS);
-        server.bind_openssl(SOCKET_ADDRESS, ssl_builder)?
+        log!("bind: 0.0.0.0:80");
+        log!("bind: 0.0.0.0:{}", PORT);
+        server
+            //.bind(("0.0.0.0", 80))? // HTTP port
+            .bind_openssl(("0.0.0.0", PORT), ssl_builder)?
     } else {
         server
     }

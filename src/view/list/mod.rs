@@ -50,10 +50,11 @@ pub fn List(cx: Scope) -> impl IntoView {
     };
 
     view! { cx,
+        /*
         <input type="number"
-            value=1
             on:change=move |e| list.send_msg(ListMsg::Get(event_target_value(&e).parse::<usize>().unwrap_or(1)))
         />
+        */
         <section class="shopping-list">
             <ListHeader/>
             <Suspense fallback=list_view>

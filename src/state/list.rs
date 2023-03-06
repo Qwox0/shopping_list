@@ -5,32 +5,53 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ListMsg {
-    Get(usize), // serde_urlencoded only supports Strings
     GetAll,
+    Add(ItemSerialized),
+    Remove(Uuid),
+
+    Get(usize), // for debugging
 }
 
 #[server(GetItemList, "/api", "Cbor")] // Cbor: + smaller + allows for enums with non String values - needs wasm even in forms
 pub async fn get_item_list(cx: Scope, msg: ListMsg) -> Result<Vec<ItemSerialized>, ServerFnError> {
     use crate::state::db::InDb;
-    log!("msg: {:?}", msg);
-    /*
-    let list = crate::state::db::ItemsDbTable::new()
+    log!("got msg: {:?}", msg);
+    let mut connection = ItemList::get_db_connection()
         .await
-        .expect("got db")
-        */
-    //let list = crate::state::db::DbConnection::<ItemSerialized>::new();
-    let list = ItemList::get_db_connection()
-        .await
-        .expect("got db connection")
-        .get_all(cx)
-        .await
-        .expect("got items");
+        .expect("got db connection");
+
+    // change value
     let list = match msg {
-        ListMsg::Get(count) => list.into_iter().take(count).collect(),
-        ListMsg::GetAll => list,
+        ListMsg::Add(item) => connection
+            .add(item)
+            .await
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))?
+            .get_all(cx)
+            .await
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))?,
+        ListMsg::Remove(id) => connection
+            .remove(id)
+            .await
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))?
+            .get_all(cx)
+            .await
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))?,
+        ListMsg::GetAll => connection
+            .get_all(cx)
+            .await
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))?,
+
+        ListMsg::Get(count) => connection
+            .get_all(cx)
+            .await
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))?
+            .into_iter()
+            .take(count)
+            .collect(),
     };
+
     log!("request list: {:?}", list);
-    std::thread::sleep(std::time::Duration::from_millis(1000));
+    //std::thread::sleep(std::time::Duration::from_millis(500));
     Ok(list)
 }
 
@@ -88,16 +109,12 @@ impl ItemList {
         self.message.set(msg)
     }
 
-    pub fn add(&self, item: Item) {
-        todo!();
-    }
-
-    pub fn add_new_item(&self, cx: Scope, new_item: Item) {
-        todo!();
+    pub fn add(&self, item: ItemSerialized) {
+        self.message.set(ListMsg::Add(item))
     }
 
     pub fn remove(&self, id: Uuid) {
-        todo!();
+        self.message.set(ListMsg::Remove(id))
     }
 }
 
@@ -105,17 +122,17 @@ impl ItemList {
 impl crate::state::db::InDb for ItemList {
     const DB_URL: &'static str = "sqlite:./data/ShoppingList.db";
     const TABLE_NAME: &'static str = "items";
-    const COLUMNS_TUPLE: &'static str = "()";
+    const HEADERS_TUPLE: &'static str = "(id, name, amount, state)";
     type RowType = ItemSerialized;
 
     fn bind_values<'a>(
-        query_builder: &'a mut sqlx::QueryBuilder<'a, sqlx::Sqlite>,
+        query: sqlx::query::Query<'a, sqlx::Sqlite, sqlx::sqlite::SqliteArguments<'a>>,
         row: Self::RowType,
-    ) -> &mut sqlx::QueryBuilder<'a, sqlx::Sqlite> {
-        query_builder
-            .push_bind(row.id.clone())
-            .push_bind(row.name.clone())
-            .push_bind(row.amount.clone())
-            .push_bind(row.state.clone())
+    ) -> sqlx::query::Query<'a, sqlx::Sqlite, sqlx::sqlite::SqliteArguments<'a>> {
+        query
+            .bind(row.id.clone())
+            .bind(row.name.clone())
+            .bind(row.amount.clone())
+            .bind(row.state.clone())
     }
 }

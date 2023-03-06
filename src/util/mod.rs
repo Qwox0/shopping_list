@@ -46,6 +46,7 @@ pub fn get_html_document() -> Option<web_sys::HtmlDocument> {
     }
 }
 
+/// During ssr this will always return `true`.
 pub fn is_server_available() -> bool {
     get_window()
         .map(|w| w.navigator().on_line())

@@ -1,5 +1,5 @@
 use crate::{
-    state::{app_state::AppState, item::Item},
+    state::{app_state::AppState, item::Item, item_serialized::ItemSerialized},
     view::{
         item::{ItemView, ItemViewProps},
         text::text,
@@ -13,10 +13,17 @@ pub fn ListHeader(cx: Scope) -> impl IntoView {
     let list = AppState::from_context(cx).item_list;
 
     let (new_item, set_new_item) = create_signal(cx, Item::empty(cx));
+    //let (new_item_name, set_new_item_name) = Signal::derive(cx, move || new_item().name);
     let (new_item_name, set_new_item_name) = new_item().name.split();
     let (new_item_amount, set_new_item_amount) = new_item().amount.split();
 
     let is_preview_empty = move || new_item_name() == "" && new_item_amount() == 1;
+
+    let add_item = move || {
+        list.add(new_item.with(ItemSerialized::new_with_item));
+        set_new_item_name("".to_string());
+        set_new_item_amount(1);
+    };
 
     view! {
         cx,
@@ -35,11 +42,11 @@ pub fn ListHeader(cx: Scope) -> impl IntoView {
                 <input type="button"
                     class="new-item-button"
                     value="+"
-                    on:click=move |_| list.add_new_item(cx, new_item())
+                    on:click=move |_| add_item()
                 />
             </div>
             <div class="new-item-preview" hidden=move || is_preview_empty()>
-                <ItemView item=new_item() />
+                <ItemView item=new_item() is_preview=true />
             </div>
         </header>
     }

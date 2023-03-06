@@ -45,7 +45,7 @@ pub fn App(cx: Scope) -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="/de" view=|cx| view! { cx, <HomePage lang=Language::German/> } ssr=SsrMode::Async /> // or InOrder; OutOfOrder shows Loading
-                    <Route path="/en" view=|cx| view! { cx, <HomePage lang=Language::English/> } ssr=SsrMode::InOrder />
+                    <Route path="/en" view=|cx| view! { cx, <HomePage lang=Language::English/> } ssr=SsrMode::Async />
 
                     <Route path="" view=move |cx| view! { cx, <Redirect path=language().short() /> }/>
                 </Routes>

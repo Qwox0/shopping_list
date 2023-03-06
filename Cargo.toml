@@ -33,13 +33,22 @@ display_me = { git = "https://github.com/Qwox0/display_me", version = "0.1.0" }
 gloo-net = "0.2.6"
 sqlx = { version = "0.6.2", features = ["runtime-actix-native-tls", "sqlite", "uuid"], optional = true }
 futures = "0.3.26"
-#reqwest = { version = "0.11", features = ["json"] }
-#reqwasm = "0.5.0"
+futures-util = { version = "0.3", optional = true, default-features = false, features = ["std"] }
 
 [features]
 default = ["ssr"]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
-ssr = ["dep:actix-files", "dep:actix-web", "dep:leptos_actix", "dep:sqlx", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "openssl"]
+ssr = [
+    "dep:actix-files",
+    "dep:actix-web",
+    "dep:leptos_actix",
+    "dep:sqlx",
+    "dep:futures-util",
+    "leptos/ssr",
+    "leptos_meta/ssr",
+    "leptos_router/ssr",
+    "openssl"
+]
 
 [package.metadata.leptos]
 output-name = "shopping_list"
@@ -48,7 +57,7 @@ site-pkg-dir = "pkg"
 env = "DEV" # The environment Leptos will run in, usually either "DEV" or "PROD"
 site-addr = "127.0.0.1:3000" # In this Template this is used for dev only! See main.rs
 #reload-port = 3001 # The port to use for automatic reload monitoring
-reload-port = 33081 # The port to use for automatic reload monitoring
+reload-port = 33082 # The port to use for automatic reload monitoring
 
 style-file = "style/main.scss"
 assets-dir = "assets" # Assets source dir. All files found here will be copied and synchronized to site-root. The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir. Optional. Env: LEPTOS_ASSETS_DIR.

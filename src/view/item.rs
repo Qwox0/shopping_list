@@ -5,7 +5,14 @@ use crate::{
 use leptos::*;
 
 #[component]
-pub fn ItemView(cx: Scope, item: Item) -> impl IntoView {
+pub fn ItemView(
+    cx: Scope,
+    item: Item,
+    /// Defaults to false.
+    #[prop(optional)]
+    is_preview: Option<bool>,
+) -> impl IntoView {
+    let is_preview = is_preview.unwrap_or(false);
     let list = AppState::from_context(cx).item_list;
 
     let delete = move |_e| {
@@ -39,16 +46,28 @@ pub fn ItemView(cx: Scope, item: Item) -> impl IntoView {
                 {move || { format!("{}", item) }}
             </div>
             <div class="buttons">
-                <input type="image"
-                    alt=text!(cx, |d| d.item.edit.clone())
-                    src="/img/pen.webp"
-                    on:click=move |_e| {}
+                <Show when=move || !is_preview
+                    fallback=|cx| view! { cx,
+                        <input type="button"//type="image"
+                            value="+"
+                            //alt=text!(cx, |d| d.item.edit.clone())
+                            //src="/img/pen.webp"
+                            on:click=move |_e| {}
+                            always_shown=true
+                        />
+                    }
+                >
+                    <input type="image"
+                        alt=text!(cx, |d| d.item.edit.clone())
+                        src="/img/pen.webp"
+                        on:click=move |_e| {}
+                        />
+                    <input type="image"
+                        alt=text!(cx, |d| d.item.remove.clone())
+                        src="/img/bin.webp"
+                        on:click=delete
                     />
-                <input type="image"
-                    alt=text!(cx, |d| d.item.remove.clone())
-                    src="/img/bin.webp"
-                    on:click=delete
-                />
+                </Show>
             </div>
         </div>
 
