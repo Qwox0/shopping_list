@@ -1,0 +1,32 @@
+section#list-sec {
+    display: flex;
+    justify-content: center;
+}
+
+#shopping_list {
+    flex: 100% 1 1;
+    max-width: 1300px;
+    background-color: red;
+    list-style-type: none;
+    margin: 0;
+    padding: 0 1rem;
+}
+
+.item {
+    background-color: green;
+    height: 4rem;
+    overflow: hidden;
+    border: 2px solid #ddd;
+    padding: 1px;
+
+    display: flex;
+    align-items: center;
+
+    >img {
+        height: 100%;
+    }
+}
+
+.item:has(> input[type="checkbox"]:checked) {
+    text-decoration: line-through;
+}

@@ -1,0 +1,34 @@
+.popup-img-container[hidden] {
+    display: none;
+}
+
+.popup-img-container {
+    position: absolute;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+
+    width: 100vw;
+    width: 100svw;
+    height: 100vh;
+    height: 100svh;
+
+    display: flex;
+    justify-content: center;
+
+    padding: 3rem;
+
+    >img.popup-img {
+        /* HACK: scale up image to ensure that it is bigger than max-width/max-height. */
+        /* Extremely small images are still smaller than the container! */
+        --scale-factor: 10;
+        flex-shrink: 0;
+        display: block;
+        max-height: calc(100% / var(--scale-factor, 1));
+        max-width: calc(100% / var(--scale-factor, 1));
+        transform: scale(var(--scale-factor));
+        margin: auto;
+        border-radius: calc(1rem / var(--scale-factor));
+        box-shadow: 0 0 calc(5rem / var(--scale-factor)) black;
+        overflow: hidden;
+    }
+}
