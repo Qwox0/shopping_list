@@ -38,3 +38,47 @@ pub fn force_use_context<Ctx: Clone + 'static>() -> Ctx {
         panic!("expected context of type: {:?}", std::any::type_name::<Ctx>());
     })
 }
+
+pub trait IntoJsFuture {
+    fn into_future(self) -> wasm_bindgen_futures::JsFuture;
+}
+
+impl IntoJsFuture for web_sys::js_sys::Promise {
+    fn into_future(self) -> wasm_bindgen_futures::JsFuture {
+        wasm_bindgen_futures::JsFuture::from(self)
+    }
+}
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum JsSetError {
+    #[error("Can only set properties on Objects")]
+    NotAnObject,
+
+    #[error("Setting the propertiy was not successful")]
+    NotSuccessful,
+}
+
+pub trait JsSet {
+    fn set(&mut self, prop: &str, val: &wasm_bindgen::JsValue) -> Result<(), JsSetError>;
+}
+
+impl JsSet for web_sys::js_sys::Object {
+    fn set(&mut self, prop: &str, val: &wasm_bindgen::JsValue) -> Result<(), JsSetError> {
+        let prop = &prop.into();
+        match web_sys::js_sys::Reflect::set(&self, prop, val) {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(JsSetError::NotSuccessful),
+            Err(_) => Err(JsSetError::NotAnObject), /* see <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set#exceptions> */
+        }
+    }
+}
+
+pub trait OptionDo<T> {
+    fn do_(self, f: impl FnOnce(T));
+}
+
+impl<T> OptionDo<T> for Option<T> {
+    fn do_(self, f: impl FnOnce(T)) {
+        self.map(f);
+    }
+}

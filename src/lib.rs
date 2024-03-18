@@ -1,14 +1,21 @@
+#![feature(unboxed_closures)]
+#![feature(fn_traits)]
+
 pub mod app;
-// pub mod error_template;
+mod barcode_scanner;
+mod camera;
+#[cfg(feature = "ssr")]
+mod db;
+mod error;
 #[cfg(feature = "ssr")]
 pub mod fileserv;
-
-mod barcode;
 mod header_bar;
 mod image;
-mod img_popup;
+mod item;
 mod list;
 mod main_page;
+mod option_signal;
+mod popup;
 mod util;
 
 #[cfg(feature = "hydrate")]

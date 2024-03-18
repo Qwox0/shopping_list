@@ -1,5 +1,0 @@
-CREATE TABLE items (
-    id BLOB PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-    amount INTEGER NOT NULL
-);

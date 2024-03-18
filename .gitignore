@@ -4,11 +4,4 @@ pkg
 
 *.pem
 
-/data/*
-!/data/init
-
-
-
-# Added by cargo
-
-/target
+/data/ShoppingList.db

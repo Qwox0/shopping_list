@@ -1,9 +1,11 @@
-.popup-img-container[hidden] {
+.popup-container[hidden] {
     display: none;
 }
 
-.popup-img-container {
+.popup-container {
     position: absolute;
+    top: 0;
+    left: 0;
     z-index: 1000;
     backdrop-filter: blur(5px);
 
@@ -17,11 +19,10 @@
 
     padding: 3rem;
 
-    >img.popup-img {
+    img, video {
         /* HACK: scale up image to ensure that it is bigger than max-width/max-height. */
         /* Extremely small images are still smaller than the container! */
         --scale-factor: 10;
-        flex-shrink: 0;
         display: block;
         max-height: calc(100% / var(--scale-factor, 1));
         max-width: calc(100% / var(--scale-factor, 1));
@@ -29,6 +30,5 @@
         margin: auto;
         border-radius: calc(1rem / var(--scale-factor));
         box-shadow: 0 0 calc(5rem / var(--scale-factor)) black;
-        overflow: hidden;
     }
 }

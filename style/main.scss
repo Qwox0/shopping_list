@@ -1,17 +1,7 @@
 @import "defaults.scss";
 
-#header-bar {
-    display: flex;
-    justify-content: space-between;
-    background-color: grey;
-    position: sticky;
-    top: 0;
-    padding: 1rem 2rem;
-}
-
 .cursor-pointer {
     cursor: pointer;
 }
 
-
-@import "list.scss", "img_popup.scss";
+@import "header-bar.scss", "list.scss", "popup.scss";
