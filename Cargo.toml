@@ -8,6 +8,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 axum = { version = "0.7", optional = true }
+axum-server = { version = "0.6", features = ["tls-rustls"], optional = true }
 console_error_panic_hook = "0.1"
 leptos = { version = "0.6", features = ["nightly"] }
 leptos_axum = { version = "0.6", optional = true }
@@ -52,6 +53,7 @@ rxing = "*"
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
     "dep:axum",
+    "dep:axum-server",
     "dep:tokio",
     "dep:tower",
     "dep:tower-http",
@@ -93,6 +95,8 @@ assets-dir = "assets"
 # The IP and port (ex: 127.0.0.1:3000) where the server serves the content. Use it in your server setup.
 # site-addr = "127.0.0.1:3000"
 site-addr = "0.0.0.0:3000"
+# site-addr = "[::]:3000"
+# site-addr = "[::]:443"
 
 # The port to use for automatic reload monitoring
 reload-port = 3001

@@ -2,6 +2,7 @@ use crate::{
     barcode_scanner::{Barcode, BarcodeScanner, OptionBarcode},
     error::{Error, Result},
     image::Image,
+    item_count::ItemCount,
     option_signal::create_option_signal,
     popup::{Popup, PopupSignal},
     util::OptionDo,
@@ -15,8 +16,10 @@ pub struct ItemData {
     pub(crate) name: String,
     pub(crate) amount: i64,
     pub(crate) barcode: OptionBarcode,
+    pub(crate) brands: Option<String>,
     pub(crate) img_url: Option<String>,
     pub(crate) thumb_url: Option<String>,
+    pub(crate) quantity: Option<String>,
 }
 
 /// TODO?
@@ -30,12 +33,13 @@ pub struct Item {
 
 #[component]
 pub fn ItemView(item: Item) -> impl IntoView {
-    let ItemData { name, amount, barcode, img_url, thumb_url } = item.data;
+    let ItemData { name, amount, barcode, img_url, thumb_url, .. } = item.data;
     view! {
         <li class="item">
             <input type="checkbox"/>
             <Image thumb_url full_url=img_url/>
             <span>{ name }</span>
+            <ItemCount />
         </li>
     }
 }
@@ -79,6 +83,7 @@ where H: Fn() -> bool + 'static {
                     item.update(|i| i.as_mut().do_(|i| i.name = text))
                 }
             />
+            <ItemCount />
             <div class="new-item--buttons">
                 <img
                     src="img/barcode-scan-svgrepo-com.svg"
@@ -114,10 +119,12 @@ impl Default for ItemData {
     fn default() -> Self {
         Self {
             name: "".to_string(),
-            amount: 0,
+            amount: 1,
             barcode: OptionBarcode::none(),
             img_url: None,
             thumb_url: None,
+            brands: None,
+            quantity: None,
         }
     }
 }
@@ -131,12 +138,88 @@ impl ItemData {
             status: u8,
             status_verbose: String,
         }
-        #[derive(Debug, Serialize, Deserialize)]
+
+        #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+        #[serde(default)]
+        pub struct Nutriments {
+            carbohydrates: f32,
+            carbohydrates_100g: f32,
+            carbohydrates_unit: String,
+            carbohydrates_value: f32,
+            energy: u32,
+            #[serde(rename = "energy-kcal")]
+            energy_kcal: u32,
+            #[serde(rename = "energy-kcal_100g")]
+            energy_kcal_100g: u32,
+            #[serde(rename = "energy-kcal_unit")]
+            energy_kcal_unit: String,
+            #[serde(rename = "energy-kcal_value")]
+            energy_kcal_value: u32,
+            #[serde(rename = "energy-kcal_value_computed")]
+            energy_kcal_value_computed: f32,
+            energy_100g: u32,
+            energy_unit: String,
+            energy_value: u32,
+            // fat: u32,
+            // fat_100g: u32,
+            // fat_unit: String,
+            // fat_value: u32,
+            // fiber: f32,
+            // fiber_100g: f32,
+            // fiber_unit: String,
+            // fiber_value: f32,
+            // #[serde(rename = "nutrition-score-fr")]
+            // nutrition_score_fr: u32,
+            // #[serde(rename = "nutrition-score-fr_100g")]
+            // nutrition_score_fr_100g: u32,
+            proteins: f32,
+            proteins_100g: f32,
+            proteins_unit: String,
+            proteins_value: f32,
+            salt: f32,
+            salt_100g: f32,
+            salt_unit: String,
+            salt_value: f32,
+            // #[serde(rename = "saturated-fat")]
+            // saturated_fat: f32,
+            // #[serde(rename = "saturated-fat_100g")]
+            // saturated_fat_100g: f32,
+            // #[serde(rename = "saturated-fat_unit")]
+            // saturated_fat_unit: String,
+            // #[serde(rename = "saturated-fat_value")]
+            // saturated_fat_value: f32,
+            sodium: f32,
+            sodium_100g: f32,
+            sodium_unit: String,
+            sodium_value: f32,
+            sugars: f32,
+            sugars_100g: f32,
+            sugars_unit: String,
+            sugars_value: f32,
+        }
+
+        #[derive(Debug, Default, Serialize, Deserialize)]
+        #[serde(default)]
+        pub struct NutrientLevels {
+            fat: String,
+            salt: String,
+            #[serde(rename = "saturated-fat")]
+            saturated_fat: String,
+            sugars: String,
+        }
+
+        #[derive(Debug, Default, Serialize, Deserialize)]
+        #[serde(default)]
         pub struct OpenFoodFactsProduct {
             product_name: String,
-            product_name_de: Option<String>,
+            // product_name_de: Option<String>,
+            brands: String,
+            quantity: String,
+            // product_quantity: Option<String>,
             image_url: Option<String>,
             image_thumb_url: Option<String>,
+            //nutrient_levels: Option<Nutriments>,
+            nutriments: Nutriments,
         }
         const OK_STATUS: u8 = 1;
 
@@ -156,6 +239,8 @@ impl ItemData {
             barcode: OptionBarcode::some(barcode),
             img_url: product.image_url,
             thumb_url: product.image_thumb_url,
+            brands: Some(product.brands),
+            quantity: Some(product.quantity),
         })
     }
 

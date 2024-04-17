@@ -1,15 +1,47 @@
 use crate::{
-    barcode_scanner::BarcodeScanner, camera::CameraService, main_page::MainPage,
-    option_signal::create_option_signal,
+    barcode_scanner::Barcode, camera::CameraService, item::ItemData, language::Language,
+    list::add_item_from_barcode, main_page::MainPage,
 };
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+use web_sys::{Document, Navigator, Window};
+
+pub fn use_window() -> Option<Window> {
+    #[cfg(feature = "ssr")]
+    return None;
+    #[cfg(not(feature = "ssr"))]
+    return Some(window());
+}
+
+pub fn use_document() -> Option<Document> {
+    #[cfg(feature = "ssr")]
+    return None;
+    #[cfg(not(feature = "ssr"))]
+    return Some(document());
+}
 
 #[component]
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
+
+    let a = use_window()
+        .as_ref()
+        .map(Window::navigator)
+        .as_ref()
+        .and_then(Navigator::language)
+        .and_then(Language::new)
+        .unwrap_or_default();
+    logging::log!("preferred lang: {:?}", a);
+
+    let ht = use_document().as_ref().and_then(Document::document_element);
+
+    logging::log!("1: {:?}", ht.is_some());
+
+    create_effect(move |_| {
+        logging::log!("2: {:?}", ht.is_some());
+    });
 
     provide_context(CameraService::new());
 
@@ -43,36 +75,59 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="" view=MainPage/>
-                    <Route path="/camtest" view=CameraTest/>
+                    <Route path="/db" view=DBTool/>
                 </Routes>
             </main>
         </Router>
     }
 }
 
+#[server]
+pub async fn db_action(barcode: String, action: String) -> Result<String, ServerFnError> {
+    let barcode = Barcode::try_from(barcode)?;
+
+    match action.as_str() {
+        "request json" => {
+            let url = format!(
+                "https://world.openfoodfacts.org/api/v0/product/{}.json",
+                barcode.get_digits()
+            );
+            let val = reqwest::get(url).await.unwrap().json::<serde_json::Value>().await.unwrap();
+            Ok(format!("{:#}", val))
+        },
+        "request ItemData" => {
+            let a = ItemData::from_barcode(barcode).await?;
+            Ok(format!("{:#?}", a))
+        },
+        "Add Item" => add_item_from_barcode(barcode).await.map(|_| format!("Added Item")),
+        _ => Err(ServerFnError::new(format!("invalid action: {:?}", action))),
+    }
+}
+
 #[component]
-pub fn CameraTest() -> impl IntoView {
-    let (barcode, set_barcode) = create_option_signal();
-
-    create_effect(move |_| {
-        logging::error!("{:?}", barcode());
-        window().alert_with_message(&format!("{:?}", barcode()));
-    });
-
-    let inner_view = move || match barcode() {
-        None => view! { <BarcodeScanner set_barcode/> }.into_view(),
-        Some(Ok(barcode)) => {
-            let msg = format!("Found barcode: {:?}", barcode);
-            logging::log!("{msg}");
-            view! { <p>{ msg }</p> }.into_view()
-        },
-        Some(Err(e)) => {
-            view! { <p>{ format!("Error while scanning for barcodes: {}", e) }</p> }.into_view()
-        },
+pub fn DBTool() -> impl IntoView {
+    let action = create_server_action::<DbAction>();
+    let output = action.value();
+    let text = move || match output().transpose() {
+        Ok(s) => s.unwrap_or_default(),
+        Err(err) => format!("ERROR: {err}"),
     };
 
     view! {
-        <h1>CameraTest</h1>
-        { inner_view }
+        <h1>"DB Tool"</h1>
+        <ActionForm action=action>
+            <label for="barcode-input">"barcode: "</label>
+            <input type="text" id="barcode-input" name="barcode"/>
+            <br/>
+            <input type="submit" name="action" value="request json"/>
+            <input type="submit" name="action" value="request ItemData"/>
+            <input type="submit" name="action" value="Add Item"/>
+        </ActionForm>
+        <br/>
+        <textarea
+            prop:value=text
+            onmouseover="this.style.height = this.scrollHeight + 10 + \"px\""
+            style:width="100%"
+        />
     }
 }

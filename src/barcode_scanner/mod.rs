@@ -59,7 +59,7 @@ fn scan_for_barcode(
         return Ok(None);
     }
 
-    // time_with_label("scan_for_barcode full");
+    web_sys::console::time_with_label("scan_for_barcode full");
     let v_width = v_width_int as f64;
     /*
     let v_height = v_height_int as f64;
@@ -81,7 +81,7 @@ fn scan_for_barcode(
         .data();
     */
 
-    const CANVAS_HEIGHT: u32 = 50;
+    const CANVAS_HEIGHT: u32 = 100;
     canvas.set_width(v_width_int);
     canvas.set_height(CANVAS_HEIGHT);
     let dy = v_height_int.saturating_sub(CANVAS_HEIGHT).div_euclid(2) as f64;
@@ -122,14 +122,12 @@ fn scan_for_barcode(
     let barcode = barcode.map(BarcodeResult::from).ok();
     // time_end_with_label("decode_time"); // ~ 0.1ms
 
-    // time_end_with_label("scan_for_barcode full"); // ~ 30ms
+    web_sys::console::time_end_with_label("scan_for_barcode full"); // ~ 30ms
 
     barcode.map(Barcode::try_from).transpose()
 }
 
 #[component]
-//pub fn BarcodeScanner(set_barcode: OptionWriteSignal<Result<Barcode,
-// BarcodeError>>,) -> impl IntoView {
 pub fn BarcodeScanner<F>(set_barcode: F) -> impl IntoView
 where F: Fn(Result<Barcode, BarcodeError>) + Copy + 'static {
     let camera = CameraService::from_context();
@@ -202,7 +200,6 @@ where F: Fn(Result<Barcode, BarcodeError>) + Copy + 'static {
 
     #[cfg(feature = "hydrate")]
     create_effect(move |_| {
-        logging::log!("effect 1");
         match (video(), video_stream()) {
             (Some(video), Some(stream)) => video.set_src_object(Some(&stream)),
             (None, Some(_)) => panic!("video_stream before video"),
@@ -211,11 +208,10 @@ where F: Fn(Result<Barcode, BarcodeError>) + Copy + 'static {
     });
 
     view! {
-        //<div class="camera">
         <Transition fallback=move || view! { <p>"Loading..."</p> }>
             <video ref_=video id="camera-video" playsinline autoplay muted />
         </Transition>
         <canvas ref_=canvas hidden />
-        //</div>
+        <input type="text" prop:value="" />
     }
 }

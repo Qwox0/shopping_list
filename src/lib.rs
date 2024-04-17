@@ -12,6 +12,8 @@ pub mod fileserv;
 mod header_bar;
 mod image;
 mod item;
+mod item_count;
+mod language;
 mod list;
 mod main_page;
 mod option_signal;

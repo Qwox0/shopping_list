@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS items (
     name TEXT NOT NULL,
     amount INTEGER NOT NULL,
     barcode INTEGER,
+    brands TEXT,
     img_url TEXT,
-    thumb_url TEXT
+    thumb_url TEXT,
+    quantity TEXT
 );

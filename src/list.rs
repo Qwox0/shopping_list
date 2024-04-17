@@ -1,6 +1,7 @@
 use crate::{
     barcode_scanner::Barcode,
-    item::{Item, ItemData, ItemView, NewItemView, ShowNewItem}, util::force_use_context,
+    item::{Item, ItemData, ItemView, NewItemView, ShowNewItem},
+    util::force_use_context,
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -42,10 +43,10 @@ pub async fn get_list() -> Result<List, ServerFnError> {
 #[server]
 pub async fn add_item_from_barcode(barcode: Barcode) -> Result<(), ServerFnError> {
     pub async fn add_item_from_barcode(barcode: Barcode) -> Result<(), ServerFnError> {
-        let ItemData { name, amount, barcode, img_url, thumb_url } =
+        let ItemData { name, amount, barcode, img_url, thumb_url, .. } =
             ItemData::from_barcode(barcode).await?;
 
-        // let mut conn = crate::db::DB::connection_from_context().await?;
+        //let mut conn = crate::db::DB::connection_from_context().await?;
         let mut conn = crate::db::db().await?;
 
         let _new_id = sqlx::query!(

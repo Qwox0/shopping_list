@@ -44,39 +44,12 @@ impl From<leptos::ServerFnError> for Error {
     }
 }
 
-/*
-#[component]
-pub fn ErrorView(error: Error) -> impl IntoView {
-    view! {
-        <span class="error">
-            { format!("{}", error) }
-        </span>
+pub trait ErrInto<T> {
+    fn err_into(self) -> T;
+}
+
+impl<T, E: Into<E2>, E2> ErrInto<core::result::Result<T, E2>> for core::result::Result<T, E> {
+    fn err_into(self) -> core::result::Result<T, E2> {
+        self.map_err(Into::into)
     }
 }
-
-#[component]
-pub fn ResultView<ResF, Ok, OkF, IV>(res: ResF, ok: OkF) -> impl IntoView
-where
-    ResF: Fn() -> Result<Ok> + 'static,
-    OkF: FnOnce(Ok) -> IV,
-    IV: IntoView + 'static,
-{
-    /*
-    res()
-        .map(ok)
-        .map(IV::into_view)
-        .unwrap_or_else(|error| view! { <ErrorView error/> })
-        */
-    res().map(ok).into_view()
-}
-
-#[component]
-pub fn OptionView<Opt, T, F, IV>(opt: Opt, some: F) -> impl IntoView
-where
-    Opt: Fn() -> Option<T> + 'static,
-    F: Fn(T) -> IV,
-    IV: IntoView + 'static,
-{
-    opt().map(some).into_view()
-}
-*/
