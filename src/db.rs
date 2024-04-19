@@ -1,13 +1,17 @@
 use crate::error::{Error, Result};
-use leptos::{provide_context, use_context, ServerFnError};
-use sqlx::{pool::PoolConnection, Connection, Pool, Sqlite, SqliteConnection};
+use leptos::{use_context, ServerFnError};
+use sqlx::{pool::PoolConnection, Connection, Pool, Sqlite, SqliteConnection, Transaction};
 
 const DB_URL: &str = dotenvy_macro::dotenv!("DATABASE_URL");
-type DBType = Sqlite;
+pub type DBType = Sqlite;
 
 #[derive(Debug, Clone)]
 pub struct DB {
     pool: Pool<DBType>,
+}
+
+lazy_static::lazy_static! {
+    pub static ref MY_DB: DB = DB::new().expect("could connect to DB");
 }
 
 impl DB {
@@ -16,15 +20,19 @@ impl DB {
         Ok(DB { pool })
     }
 
-    pub async fn connection_from_context() -> Result<PoolConnection<Sqlite>> {
-        Ok(use_context::<Self>()
-            .ok_or(Error::missing_ctx::<Self>())?
-            .pool
-            .acquire()
-            .await?)
+    pub fn as_pool(&self) -> &Pool<DBType> {
+        &self.pool
     }
-}
 
-pub async fn db() -> core::result::Result<SqliteConnection, ServerFnError> {
-    Ok(SqliteConnection::connect(DB_URL).await?)
+    pub async fn connection(&self) -> Result<PoolConnection<DBType>> {
+        Ok(self.pool.acquire().await?)
+    }
+
+    pub async fn begin_transaction(&self) -> Result<Transaction<'static, DBType>> {
+        Ok(self.pool.begin().await?)
+    }
+
+    pub async fn connection_from_context() -> Result<PoolConnection<DBType>> {
+        Ok(use_context::<Self>().ok_or(Error::missing_ctx::<Self>())?.connection().await?)
+    }
 }

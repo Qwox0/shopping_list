@@ -14,7 +14,7 @@ leptos = { version = "0.6", features = ["nightly"] }
 leptos_axum = { version = "0.6", optional = true }
 leptos_meta = { version = "0.6", features = ["nightly"] }
 leptos_router = { version = "0.6", features = ["nightly"] }
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.12", features = ["json"] }
 serde = "1.0"
 serde_json = "1.0"
 sqlx = { version = "0.7", features = [
@@ -48,6 +48,7 @@ rxing-wasm = { git = "https://github.com/rxing-core/rxing-wasm", version = "0.2.
     "decode_hints",
 ] }
 rxing = "*"
+lazy_static = "1.4.0"
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]

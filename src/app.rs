@@ -1,7 +1,7 @@
 use crate::{
     barcode_scanner::Barcode,
     camera::CameraService,
-    item::{openfoodsfacts, ItemData},
+    item::{data::NewItem, openfoodsfacts},
     language::Language,
     list::add_item_from_barcode,
     main_page::MainPage,
@@ -94,7 +94,7 @@ pub async fn db_action(barcode: String, action: String) -> Result<String, Server
     match action.as_str() {
         "request json" => Ok(format!("{:#}", openfoodsfacts::request_with_barcode(barcode).await?)),
         "request ItemData" => {
-            let a = ItemData::from_barcode(barcode).await?;
+            let a = NewItem::from_barcode(barcode).await?;
             Ok(format!("{:#?}", a))
         },
         "Add Item" => add_item_from_barcode(barcode).await.map(|_| format!("Added Item")),

@@ -1,22 +1,25 @@
 mod count;
 pub mod data;
 pub mod openfoodsfacts;
+pub mod variant_data;
 
-use self::{count::ItemCount, data::Item, openfoodsfacts::OpenFoodFactsProduct};
+use self::{count::ItemCount, data::Item};
 use crate::{
-    barcode_scanner::{Barcode, BarcodeScanner, OptionBarcode},
-    error::{Error, Result},
+    barcode_scanner::BarcodeScanner,
     image::Image,
+    item::{
+        data::NewItem,
+        variant_data::{ItemVariant, NewItemVariant},
+    },
     option_signal::create_option_signal,
     popup::{Popup, PopupSignal},
     util::OptionDo,
 };
 use leptos::*;
-use serde::{Deserialize, Serialize};
 
 #[component]
 pub fn ItemView(item: Item) -> impl IntoView {
-    let ItemData { name, amount, barcode, img_url, thumb_url, .. } = item.data;
+    let ItemVariant { name, img_url, thumb_url, .. } = item.variants[0].clone(); // TODO
     view! {
         <li class="item">
             <input type="checkbox"/>
@@ -38,16 +41,16 @@ where H: Fn() -> bool + 'static {
         new_item_barcode,
         move |barcode| async move {
             if let Some(barcode) = barcode {
-                let a = ItemData::from_barcode(barcode).await;
+                let a = NewItem::from_barcode(barcode).await;
                 if let Err(e) = a.as_ref() {
                     logging::error!("ItemData::from_barcode error: {}", e);
                 }
                 a.unwrap_or_default()
             } else {
-                ItemData::default()
+                NewItem { variants: vec![NewItemVariant::default()], ..NewItem::default() }
             }
         },
-        Some(ItemData::default()),
+        Some(NewItem::default()),
     );
 
     create_effect(move |_| {
@@ -60,10 +63,10 @@ where H: Fn() -> bool + 'static {
             <Image thumb_url=Some("".to_string()) full_url=Some("".to_string())/>
             <input type="text" id="name-input"
                 placeholder="Name"
-                prop:value=move || item.with(|i| i.as_ref().map(|i| i.name.clone()).unwrap_or_default())
+                prop:value=move || item.with(|i| i.as_ref().map(|i| i.variants[0].name.clone()).unwrap_or_default())
                 on:change=move |ev| {
                     let text = event_target_value(&ev);
-                    item.update(|i| i.as_mut().do_(|i| i.name = text))
+                    item.update(|i| i.as_mut().do_(|i| i.variants[0].name = text))
                 }
             />
             <ItemCount />

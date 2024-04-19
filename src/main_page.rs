@@ -1,8 +1,4 @@
-use crate::{
-    header_bar::HeaderBar,
-    item::{NewItemView, ShowNewItem},
-    list::ListView,
-};
+use crate::{header_bar::HeaderBar, item::ShowNewItem, list::ListView};
 use leptos::*;
 
 #[component]

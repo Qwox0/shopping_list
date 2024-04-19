@@ -1,15 +1,14 @@
-CREATE TABLE IF NOT EXISTS items (
+CREATE TABLE IF NOT EXISTS item (
     id INTEGER PRIMARY KEY NOT NULL,
     -- name TEXT NOT NULL,
     amount INTEGER NOT NULL,
-    completed BOOLEAN NOT NULL,
+    completed BOOLEAN NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS item_variants (
+CREATE TABLE IF NOT EXISTS item_variant (
     id INTEGER PRIMARY KEY NOT NULL,
     variant_of INTEGER NOT NULL, -- foreign key -> items.id
     name TEXT NOT NULL,
-    amount INTEGER NOT NULL,
     shop_id INTEGER, -- foreign key -> shops.id
     barcode INTEGER,
     brands TEXT,
@@ -18,7 +17,7 @@ CREATE TABLE IF NOT EXISTS item_variants (
     quantity TEXT
 );
 
-CREATE TABLE IF NOT EXISTS shops (
+CREATE TABLE IF NOT EXISTS shop (
     id INTEGER PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL
 );

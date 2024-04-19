@@ -1,5 +1,6 @@
 #![feature(unboxed_closures)]
 #![feature(fn_traits)]
+#![feature(type_changing_struct_update)]
 
 pub mod app;
 mod barcode_scanner;

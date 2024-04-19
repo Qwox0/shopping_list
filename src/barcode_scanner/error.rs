@@ -1,4 +1,4 @@
-use crate::{camera::CameraError, util::JsSetError};
+use crate::camera::CameraError;
 use std::num::{ParseIntError, TryFromIntError};
 use wasm_bindgen::JsValue;
 

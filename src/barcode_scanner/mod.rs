@@ -1,7 +1,7 @@
 mod barcode;
 mod error;
 
-use crate::{camera::CameraService, option_signal::OptionWriteSignal};
+use crate::camera::CameraService;
 pub use barcode::*;
 pub use error::BarcodeError;
 use leptos::{
@@ -199,12 +199,10 @@ where F: Fn(Result<Barcode, BarcodeError>) + Copy + 'static {
     */
 
     #[cfg(feature = "hydrate")]
-    create_effect(move |_| {
-        match (video(), video_stream()) {
-            (Some(video), Some(stream)) => video.set_src_object(Some(&stream)),
-            (None, Some(_)) => panic!("video_stream before video"),
-            _ => (),
-        }
+    create_effect(move |_| match (video(), video_stream()) {
+        (Some(video), Some(stream)) => video.set_src_object(Some(&stream)),
+        (None, Some(_)) => panic!("video_stream before video"),
+        _ => (),
     });
 
     view! {

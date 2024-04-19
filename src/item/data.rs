@@ -1,68 +1,14 @@
+use super::variant_data::{ItemVariant, ItemVariantImpl, NewItemVariant};
 use crate::{
     barcode_scanner::{Barcode, OptionBarcode},
     error::Result,
     item::openfoodsfacts::OpenFoodFactsProduct,
 };
+#[cfg(feature = "ssr")]
+use crate::{db::DBType, db::DB};
 use serde::{Deserialize, Serialize};
 
-/*
-CREATE TABLE IF NOT EXISTS items (
-    id INTEGER PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-    amount INTEGER NOT NULL,
-    completed BOOLEAN NOT NULL,
-);
-
-
-CREATE TABLE IF NOT EXISTS shops (
-    id INTEGER PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-);
- */
-
-/*
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct ItemData {
-    pub name: String,
-    pub amount: i64,
-    pub barcode: OptionBarcode,
-    pub brands: Option<String>,
-    pub img_url: Option<String>,
-    pub thumb_url: Option<String>,
-    pub quantity: Option<String>,
-}
-
-/// TODO?
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct Item {
-    pub id: i64,
-    #[cfg_attr(feature = "ssr", sqlx(flatten))]
-    pub data: ItemData,
-}
-*/
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct ItemVariantImpl<ID> {
-    pub id: ID,
-    pub name: String,
-    pub amount: i64,
-    shop_id: i64, // TODO
-
-    pub barcode: OptionBarcode,
-    pub brands: Option<String>,
-    pub img_url: Option<String>,
-    pub thumb_url: Option<String>,
-    pub quantity: Option<String>,
-}
-
-pub type ItemVariant = ItemVariantImpl<i64>;
-pub type NewItemVariant = ItemVariantImpl<()>;
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct ItemImpl<ID> {
     pub id: ID,
     pub amount: i64,
@@ -79,19 +25,24 @@ impl Default for NewItem {
     }
 }
 
-impl Default for NewItemVariant {
-    fn default() -> Self {
-        Self {
-            id: (),
-            amount: 1,
-            name: "".to_string(),
-            shop_id: 0,
-            barcode: OptionBarcode::none(),
-            brands: None,
-            img_url: None,
-            thumb_url: None,
-            quantity: None,
+#[cfg(feature = "ssr")]
+impl Item {
+    pub async fn select_by_id(id: i64, db: &DB) -> Result<Self> {
+        let mut conn = db.connection().await?;
+        ItemRow::select_by_id(id, conn.as_mut())
+            .await?
+            .fetch_variants(conn.as_mut())
+            .await
+    }
+
+    pub async fn select_all(db: &DB) -> Result<Vec<Self>> {
+        let mut conn = db.connection().await?;
+        let rows = sqlx::query_as!(ItemRow, "SELECT * FROM item").fetch_all(conn.as_mut()).await?;
+        let mut items = Vec::with_capacity(rows.len());
+        for row in rows {
+            items.push(row.fetch_variants(conn.as_mut()).await?)
         }
+        Ok(items)
     }
 }
 
@@ -115,38 +66,53 @@ impl NewItem {
         })
     }
 
-    pub async fn insert(self) -> Result<Item> {
-        todo!()
-    }
-}
+    #[cfg(feature = "ssr")]
+    pub async fn insert(self, db: &DB) -> Result<Item> {
+        let mut tx = db.begin_transaction().await?;
 
-/*
-pub async fn add_item_from_barcode(barcode: Barcode) -> Result<(), ServerFnError> {
-    pub async fn add_item_from_barcode(barcode: Barcode) -> Result<(), ServerFnError> {
-        let ItemData { name, amount, barcode, img_url, thumb_url, .. } =
-            ItemData::from_barcode(barcode).await?;
-
-        //let mut conn = crate::db::DB::connection_from_context().await?;
-        let mut conn = crate::db::db().await?;
-
-        let _new_id = sqlx::query!(
-            r#"
-INSERT INTO items(name, amount, barcode, img_url, thumb_url)
-VALUES ( ?, ?, ?, ?, ? )"#,
-            name,
-            amount,
-            barcode,
-            img_url,
-            thumb_url
+        let id = sqlx::query!(
+            "INSERT INTO item(amount, completed) VALUES ( ?, ? )",
+            self.amount,
+            self.completed
         )
-        .execute(&mut conn)
+        .execute(tx.as_mut())
         .await?
         .last_insert_rowid();
 
-        Ok(())
+        let mut variants = Vec::with_capacity(self.variants.len());
+        for v in self.variants {
+            variants.push(v.insert(id, tx.as_mut()).await?);
+        }
+
+        tx.commit().await?;
+        Ok(Item { id, variants, ..self })
     }
-    add_item_from_barcode(barcode)
-        .await
-        .inspect_err(|err| eprintln!("ERROR (add_item_from_barcode): {}", err))
 }
-*/
+
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct ItemRow {
+    pub id: i64,
+    pub amount: i64,
+    pub completed: bool,
+}
+
+#[cfg(feature = "ssr")]
+impl ItemRow {
+    pub async fn select_by_id(
+        id: i64,
+        conn: impl sqlx::Executor<'_, Database = DBType>,
+    ) -> Result<Self> {
+        Ok(sqlx::query_as!(ItemRow, "SELECT * FROM item WHERE id = ?", id)
+            .fetch_one(conn)
+            .await?)
+    }
+
+    pub async fn fetch_variants(
+        self,
+        conn: impl sqlx::Executor<'_, Database = DBType>,
+    ) -> Result<Item> {
+        let Self { id, amount, completed } = self;
+        let variants = ItemVariant::for_item(id, conn).await?;
+        Ok(Item { id, amount, completed, variants })
+    }
+}
