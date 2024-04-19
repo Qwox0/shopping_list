@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg width="800px" height="800px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none">
     <rect fill="#ff4f4f" width="100%" height="100%" rx="2.5" />
-    <svg x="10%" y="15%" width="70%" height="70%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><!-- edited version of <https://www.svgrepo.com/svg/380092/shopping-cart> -->
+    <!-- x = 1/2 - 14/24*width -->
+    <!-- <svg x="15%" y="20%" width="60%" height="60%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> -->
+    <svg x="9.1666666666%" y="15%" width="70%" height="70%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><!-- edited version of <https://www.svgrepo.com/svg/380092/shopping-cart> -->
+
+        <!-- <circle cx="14" cy="20" r="0.1" fill="#fff"/> --> <!-- center of wheels -->
+
         <circle cx="10" cy="20" r="1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <circle cx="18" cy="20" r="1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M2 3H5.5C5.5 3 5.91294 4.82843 6.17753 6C6.70622 8.34099 7.43235 11.5562 7.85836 13.4425C8.0643 14.3543 8.87398 15 9.8088 15H18.3957C19.3331 15 20.1447 14.3489 20.348 13.4339L22 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

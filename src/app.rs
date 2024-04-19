@@ -54,6 +54,7 @@ pub fn App() -> impl IntoView {
         <Meta name="description" content="Fullstack Rust Shopping List"/>
         <Stylesheet id="leptos" href="/pkg/shopping_list.css"/> // id=leptos means cargo-leptos will hot-reload this stylesheet
         // <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
+        <Link rel="shortcut icon" type_="image/svg+xml" href="/img/favicon.svg"/>
         // <Link rel="manifest" href="/pwa.webmanifest"/>
 
         // <Script type_="text/javascript" src="/js/init_sw.js"/>
