@@ -1,6 +1,10 @@
 use crate::{
-    barcode_scanner::Barcode, camera::CameraService, item::ItemData, language::Language,
-    list::add_item_from_barcode, main_page::MainPage,
+    barcode_scanner::Barcode,
+    camera::CameraService,
+    item::{openfoodsfacts, ItemData},
+    language::Language,
+    list::add_item_from_barcode,
+    main_page::MainPage,
 };
 use leptos::*;
 use leptos_meta::*;
@@ -88,14 +92,7 @@ pub async fn db_action(barcode: String, action: String) -> Result<String, Server
     let barcode = Barcode::try_from(barcode)?;
 
     match action.as_str() {
-        "request json" => {
-            let url = format!(
-                "https://world.openfoodfacts.org/api/v0/product/{}.json",
-                barcode.get_digits()
-            );
-            let val = reqwest::get(url).await.unwrap().json::<serde_json::Value>().await.unwrap();
-            Ok(format!("{:#}", val))
-        },
+        "request json" => Ok(format!("{:#}", openfoodsfacts::request_with_barcode(barcode).await?)),
         "request ItemData" => {
             let a = ItemData::from_barcode(barcode).await?;
             Ok(format!("{:#?}", a))
