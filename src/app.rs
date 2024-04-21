@@ -49,8 +49,8 @@ pub fn App() -> impl IntoView {
 
     provide_context(CameraService::new());
 
-    #[cfg(feature = "ssr")]
-    provide_context(crate::db::DB::new().expect("could connect to DB"));
+    //#[cfg(feature = "ssr")]
+    //provide_context(crate::db::DB::new().expect("could connect to DB"));
 
     view! {
         <Meta charset="utf-8"/>

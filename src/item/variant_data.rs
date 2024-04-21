@@ -1,4 +1,8 @@
-use crate::{barcode_scanner::OptionBarcode, error::Result};
+use super::openfoodsfacts::OpenFoodFactsProduct;
+use crate::{
+    barcode_scanner::{Barcode, OptionBarcode},
+    error::Result,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -51,6 +55,18 @@ impl ItemVariant {
 }
 
 impl NewItemVariant {
+    pub async fn from_barcode(barcode: Barcode) -> Result<Self> {
+        OpenFoodFactsProduct::request_with_barcode(barcode).await.map(|data| Self {
+            name: data.product_name,
+            barcode: OptionBarcode::some(barcode),
+            img_url: data.image_url,
+            thumb_url: data.image_thumb_url,
+            brands: Some(data.brands),
+            quantity: Some(data.quantity),
+            ..Self::default()
+        })
+    }
+
     #[cfg(feature = "ssr")]
     pub async fn insert(
         self,

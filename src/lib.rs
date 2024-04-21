@@ -18,6 +18,7 @@ mod list;
 mod main_page;
 mod option_signal;
 mod popup;
+mod subsignal;
 mod util;
 
 #[cfg(feature = "hydrate")]

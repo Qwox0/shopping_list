@@ -48,22 +48,7 @@ impl Item {
 
 impl NewItem {
     pub async fn from_barcode(barcode: Barcode) -> Result<Self> {
-        let OpenFoodFactsProduct {
-            product_name, image_url, image_thumb_url, brands, quantity, ..
-        } = OpenFoodFactsProduct::request_with_barcode(barcode).await?;
-
-        Ok(Self {
-            variants: vec![NewItemVariant {
-                name: product_name,
-                barcode: OptionBarcode::some(barcode),
-                img_url: image_url,
-                thumb_url: image_thumb_url,
-                brands: Some(brands),
-                quantity: Some(quantity),
-                ..NewItemVariant::default()
-            }],
-            ..Self::default()
-        })
+        Ok(Self { variants: vec![NewItemVariant::from_barcode(barcode).await?], ..Self::default() })
     }
 
     #[cfg(feature = "ssr")]

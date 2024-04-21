@@ -15,6 +15,8 @@ pub fn HeaderBar() -> impl IntoView {
         show_new_item.toggle();
     };
 
+    let tooltip = move || if show_new_item.0.get() { "Close new Item" } else { "Add new Item" };
+
     view! {
         <header id="header-bar">
             <div></div>
@@ -24,7 +26,8 @@ pub fn HeaderBar() -> impl IntoView {
             <div class="header-bar--right">
                 <img
                     src="img/plus-svgrepo-com.svg"
-                    class="new-item-button cursor-pointer scoll-smooth"
+                    title=tooltip
+                    class="new-item-button cursor-pointer"
                     class:new-item-active=move || show_new_item.0.get()
                     on:click=toggle_new_item
                 />

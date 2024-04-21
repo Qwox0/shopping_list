@@ -11,6 +11,7 @@ pub fn ItemCount() -> impl IntoView {
             <input
                 type="number"
                 min="0"
+                value=count
                 prop:value=count
                 on:change=move |ev| set_count.update(
                     |c| *c = event_target_value(&ev).parse().unwrap_or(*c)

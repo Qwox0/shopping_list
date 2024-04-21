@@ -13,20 +13,49 @@ use crate::{
     },
     option_signal::create_option_signal,
     popup::{Popup, PopupSignal},
-    util::OptionDo,
+    subsignal::subsignal,
 };
 use leptos::*;
 
 #[component]
 pub fn ItemView(item: Item) -> impl IntoView {
-    let ItemVariant { name, img_url, thumb_url, .. } = item.variants[0].clone(); // TODO
+    let Item { id, amount, completed, variants } = item;
+    let variants = create_signal(variants).0;
     view! {
         <li class="item">
-            <input type="checkbox"/>
-            <Image thumb_url full_url=img_url/>
-            <span>{ name }</span>
+            <input type="checkbox" checked=completed/>
+            //<Image thumb_url full_url=img_url/>
+            //<span>{ name }</span>
+            <div class="variants-container">
+                <For
+                    each=variants
+                    key=|v| v.id
+                    children=|item_variant| view! { <ItemVariantView item_variant /> }
+                />
+            </div>
             <ItemCount />
         </li>
+    }
+}
+
+#[component]
+/*
+pub fn ItemVariantView<Sig, F, G>(item_variant: SubRWSignal<Sig, F, G>) -> impl IntoView
+where
+    Sig: SignalWith<Value = ItemVariant>,
+    F: Fn(&Sig::Value) -> &ItemVariant,
+{
+*/
+//pub fn ItemVariantView(#[prop(into)] item_variant: Signal<ItemVariant>) ->
+// impl IntoView {
+pub fn ItemVariantView(item_variant: ItemVariant) -> impl IntoView {
+    //
+    let ItemVariant { name, img_url, thumb_url, .. } = item_variant;
+    view! {
+        <div class="variant">
+            <Image thumb_url full_url=img_url/>
+            <span>{ name }</span>
+        </div>
     }
 }
 
@@ -52,6 +81,9 @@ where H: Fn() -> bool + 'static {
         },
         Some(NewItem::default()),
     );
+    let variants =
+        subsignal(item, |i| &i.as_ref().unwrap().variants, |i| &mut i.as_mut().unwrap().variants);
+    //let variants = subsignals(variants);
 
     create_effect(move |_| {
         logging::log!("barcode: {:?}", new_item_barcode());
@@ -60,17 +92,16 @@ where H: Fn() -> bool + 'static {
     view! {
         <div class="new-item" hidden=hidden>
             <input type="checkbox"/>
-            <Image thumb_url=Some("".to_string()) full_url=Some("".to_string())/>
-            <input type="text" id="name-input"
-                placeholder="Name"
-                prop:value=move || item.with(|i| i.as_ref().map(|i| i.variants[0].name.clone()).unwrap_or_default())
-                on:change=move |ev| {
-                    let text = event_target_value(&ev);
-                    item.update(|i| i.as_mut().do_(|i| i.variants[0].name = text))
-                }
-            />
+            <div class="variants-container">
+                <For
+                    each=variants
+                    key=|v| v.id //v.with(|i| i.id)
+                    children=|item_variant| view! { <NewItemVariantView item_variant /> }
+                />
+                <AddNewItemVariantView />
+            </div>
             <ItemCount />
-            <div class="new-item--buttons">
+            <div class="buttons">
                 <img
                     src="img/barcode-scan-svgrepo-com.svg"
                     class="cursor-pointer"
@@ -88,6 +119,46 @@ where H: Fn() -> bool + 'static {
                     barcode_popup.close();
                 } />
             </Popup>
+        </div>
+    }
+}
+
+#[component]
+/*
+pub fn NewItemVariantView<Sig, F, G>(item_variant: SubRWSignal<Sig, F, G>) -> impl IntoView
+where
+    Sig: SignalWith<Value = NewItemVariant>,
+    F: Fn(&Sig::Value) -> &NewItemVariant,
+{
+*/
+//pub fn NewItemVariantView(#[prop(into)] item_variant: Signal<NewItemVariant>)
+// -> impl IntoView {
+pub fn NewItemVariantView(item_variant: NewItemVariant) -> impl IntoView {
+    let NewItemVariant { name, img_url, thumb_url, .. } = item_variant;
+    view! {
+        <div class="variant">
+            <input type="file" accept="image/*" class="image-input" />
+            <input type="text" class="name-input"
+                placeholder="Name"
+                prop:value=name
+                on:change=move |ev| {
+                    let text = event_target_value(&ev);
+                    //item.update(|i| i.as_mut().do_(|i| i.variants[0].name = text))
+                }
+            />
+        </div>
+    }
+}
+
+#[component]
+pub fn AddNewItemVariantView() -> impl IntoView {
+    view! {
+        <div class="add-variant">
+            <img
+                src="img/plus-svgrepo-com.svg"
+                title="Add new Item Variant"
+                class="new-variant-button cursor-pointer"
+            />
         </div>
     }
 }
