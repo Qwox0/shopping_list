@@ -210,6 +210,5 @@ where F: Fn(Result<Barcode, BarcodeError>) + Copy + 'static {
             <video ref_=video id="camera-video" playsinline autoplay muted />
         </Transition>
         <canvas ref_=canvas hidden />
-        <input type="text" prop:value="" />
     }
 }

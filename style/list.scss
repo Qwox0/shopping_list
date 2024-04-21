@@ -53,23 +53,39 @@ ul#shopping_list {
             scroll-snap-align: start;
 
             border: 2px solid darkgrey;
+
             &:only-child {
                 border-color: transparent;
             }
 
             display: flex;
+        }
+
+        .variant {
             gap: var(--spacing);
 
-            >img,
-            >input[type="file"][accept="image/*"] {
+            >img {
                 aspect-ratio: 1 / 1;
-                object-fit: cover;
+                &.image {
+                    object-fit: cover;
+                }
+                &.barcode-scanner {
+                    padding: 11px;
+                }
             }
 
             >span,
             >input[type="text"] {
                 flex: 1 1 0px;
                 min-width: 0px;
+            }
+        }
+
+        .add-variant {
+            justify-content: center;
+
+            >img {
+                width: 2rem;
             }
         }
     }
@@ -117,6 +133,7 @@ ul#shopping_list {
     background-color: lightgreen;
     color: black;
 
+    /*
     >div.buttons {
         flex: none;
 
@@ -127,4 +144,5 @@ ul#shopping_list {
             width: 2rem;
         }
     }
+    */
 }

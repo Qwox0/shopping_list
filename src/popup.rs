@@ -2,15 +2,24 @@ use leptos::*;
 
 #[component]
 pub fn Popup(popup: PopupSignal, children: ChildrenFn) -> impl IntoView {
+    // disable scrolling while the popup is open
+    create_effect(move |_| {
+        if let Some(b) = document().scrolling_element() {
+            let v = if popup.is_open() { "hidden" } else { "visible" };
+            let _ = b.set_attribute("style", ("overflow: ".to_string() + v + ";").as_str());
+        }
+    });
+
     view! {
-        <Show when=move || popup.is_open()>
-            <div
-                class="popup-container cursor-pointer"
-                on:click=move |_| popup.close()
-            >
+        <div
+            class="popup-container cursor-pointer"
+            on:click=move |_| popup.close()
+            hidden=move || !popup.is_open()
+        >
+            <Show when=move || popup.is_open()>
                 { children() }
-            </div>
-        </Show>
+            </Show>
+        </div>
     }
 }
 

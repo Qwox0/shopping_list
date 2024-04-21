@@ -63,7 +63,6 @@ pub fn ItemVariantView(item_variant: ItemVariant) -> impl IntoView {
 pub fn NewItemView<H>(hidden: H) -> impl IntoView
 where H: Fn() -> bool + 'static {
     let barcode_popup = PopupSignal::new();
-
     let (new_item_barcode, set_new_item_barcode) = create_option_signal();
 
     let item = create_local_resource_with_initial_value(
@@ -101,6 +100,7 @@ where H: Fn() -> bool + 'static {
                 <AddNewItemVariantView />
             </div>
             <ItemCount />
+            /*
             <div class="buttons">
                 <img
                     src="img/barcode-scan-svgrepo-com.svg"
@@ -119,6 +119,7 @@ where H: Fn() -> bool + 'static {
                     barcode_popup.close();
                 } />
             </Popup>
+            */
         </div>
     }
 }
@@ -135,9 +136,24 @@ where
 // -> impl IntoView {
 pub fn NewItemVariantView(item_variant: NewItemVariant) -> impl IntoView {
     let NewItemVariant { name, img_url, thumb_url, .. } = item_variant;
+
+    let barcode_popup = PopupSignal::new();
+    let (new_item_barcode, set_new_item_barcode) = create_option_signal();
+
     view! {
         <div class="variant">
-            <input type="file" accept="image/*" class="image-input" />
+            //<input type="file" accept="image/*" class="image-input" />
+            <img
+                src="img/barcode-scan-svgrepo-com.svg"
+                class="barcode-scanner cursor-pointer"
+                on:click=move |_| barcode_popup.open()
+            />
+            <Popup popup=barcode_popup>
+                <BarcodeScanner set_barcode=move |res| {
+                    set_new_item_barcode(res.unwrap());
+                    barcode_popup.close();
+                } />
+            </Popup>
             <input type="text" class="name-input"
                 placeholder="Name"
                 prop:value=name
