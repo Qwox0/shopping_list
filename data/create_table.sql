@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS item_variant (
     brands TEXT,
     img_url TEXT,
     thumb_url TEXT,
+    packaging TEXT,
     quantity TEXT
 );
 

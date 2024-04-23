@@ -30,6 +30,7 @@ pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
+    /*
     let a = use_window()
         .as_ref()
         .map(Window::navigator)
@@ -46,6 +47,7 @@ pub fn App() -> impl IntoView {
     create_effect(move |_| {
         logging::log!("2: {:?}", ht.is_some());
     });
+    */
 
     provide_context(CameraService::new());
 
@@ -93,10 +95,11 @@ pub async fn db_action(barcode: String, action: String) -> Result<String, Server
 
     match action.as_str() {
         "request json" => Ok(format!("{:#}", openfoodsfacts::request_with_barcode(barcode).await?)),
-        "request ItemData" => {
-            let a = NewItem::from_barcode(barcode).await?;
-            Ok(format!("{:#?}", a))
-        },
+        "request OpenFoodFactsProduct" => Ok(format!(
+            "{:#?}",
+            openfoodsfacts::OpenFoodFactsProduct::request_with_barcode(barcode).await?
+        )),
+        "request ItemData" => Ok(format!("{:#?}", NewItem::from_barcode(barcode).await?)),
         "Add Item" => add_item_from_barcode(barcode).await.map(|_| format!("Added Item")),
         _ => Err(ServerFnError::new(format!("invalid action: {:?}", action))),
     }
@@ -118,6 +121,7 @@ pub fn DBTool() -> impl IntoView {
             <input type="text" id="barcode-input" name="barcode"/>
             <br/>
             <input type="submit" name="action" value="request json"/>
+            <input type="submit" name="action" value="request OpenFoodFactsProduct"/>
             <input type="submit" name="action" value="request ItemData"/>
             <input type="submit" name="action" value="Add Item"/>
         </ActionForm>

@@ -1,29 +1,22 @@
-use super::variant_data::{ItemVariant, ItemVariantImpl, NewItemVariant};
-use crate::{
-    barcode_scanner::{Barcode, OptionBarcode},
-    error::Result,
-    item::openfoodsfacts::OpenFoodFactsProduct,
+use super::{
+    server_functions::insert_from_client,
+    variant_data::{ItemVariant, ItemVariantImpl, NewItemVariant},
 };
+use crate::{barcode_scanner::Barcode, error::Result};
 #[cfg(feature = "ssr")]
 use crate::{db::DBType, db::DB};
+use leptos::{create_server_action, ServerFnErrorErr};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ItemImpl<ID> {
     pub id: ID,
-    pub amount: i64,
+    pub amount: u64,
     pub completed: bool,
     pub variants: Vec<ItemVariantImpl<ID>>,
 }
 
 pub type Item = ItemImpl<i64>;
-pub type NewItem = ItemImpl<()>;
-
-impl Default for NewItem {
-    fn default() -> Self {
-        Self { id: (), amount: 1, completed: false, variants: vec![] }
-    }
-}
 
 #[cfg(feature = "ssr")]
 impl Item {
@@ -46,6 +39,14 @@ impl Item {
     }
 }
 
+pub type NewItem = ItemImpl<()>;
+
+impl Default for NewItem {
+    fn default() -> Self {
+        Self { id: (), amount: 1, completed: false, variants: vec![] }
+    }
+}
+
 impl NewItem {
     pub async fn from_barcode(barcode: Barcode) -> Result<Self> {
         Ok(Self { variants: vec![NewItemVariant::from_barcode(barcode).await?], ..Self::default() })
@@ -55,9 +56,10 @@ impl NewItem {
     pub async fn insert(self, db: &DB) -> Result<Item> {
         let mut tx = db.begin_transaction().await?;
 
+        let amount = self.amount as i64;
         let id = sqlx::query!(
             "INSERT INTO item(amount, completed) VALUES ( ?, ? )",
-            self.amount,
+            amount,
             self.completed
         )
         .execute(tx.as_mut())
@@ -71,6 +73,21 @@ impl NewItem {
 
         tx.commit().await?;
         Ok(Item { id, variants, ..self })
+    }
+
+    #[cfg(not(feature = "ssr"))]
+    pub async fn insert_from_client(self) -> Result<Item> {
+        let ids = insert_from_client(self.clone()).await.map_err(ServerFnErrorErr::from)?;
+        Ok(Item {
+            id: ids.item_id,
+            variants: self
+                .variants
+                .into_iter()
+                .zip(ids.variant_ids.iter().copied())
+                .map(|(variant, id)| variant.with_id(id))
+                .collect(),
+            ..self
+        })
     }
 }
 
@@ -98,6 +115,10 @@ impl ItemRow {
     ) -> Result<Item> {
         let Self { id, amount, completed } = self;
         let variants = ItemVariant::for_item(id, conn).await?;
-        Ok(Item { id, amount, completed, variants })
+        Ok(Item { id, amount: saturating_as(amount), completed, variants })
     }
+}
+
+fn saturating_as(int: i64) -> u64 {
+    int.max(0) as u64
 }

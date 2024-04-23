@@ -1,6 +1,7 @@
 mod count;
 pub mod data;
 pub mod openfoodsfacts;
+pub mod server_functions;
 pub mod variant_data;
 
 use self::{count::ItemCount, data::Item};
@@ -9,10 +10,12 @@ use crate::{
     image::Image,
     item::{
         data::NewItem,
+        server_functions::{set_amount, set_completed},
         variant_data::{ItemVariant, NewItemVariant},
     },
     option_signal::create_option_signal,
     popup::{Popup, PopupSignal},
+    server_sync_signal::ServerSyncSignal,
     subsignal::subsignal,
 };
 use leptos::*;
@@ -20,41 +23,68 @@ use leptos::*;
 #[component]
 pub fn ItemView(item: Item) -> impl IntoView {
     let Item { id, amount, completed, variants } = item;
+
+    let completed = ServerSyncSignal::new(completed, move |next| set_completed(id, next));
+    let amount = ServerSyncSignal::new(amount, move |next| set_amount(id, next));
+
     let variants = create_signal(variants).0;
+
+    let is_expanded = create_rw_signal(false);
+
     view! {
-        <li class="item">
-            <input type="checkbox" checked=completed/>
-            //<Image thumb_url full_url=img_url/>
-            //<span>{ name }</span>
+        <li
+            class="item"
+            expanded=is_expanded
+            checked=move || completed()
+        >
+            <input
+                type="checkbox"
+                class="checkbox"
+                prop:checked=move || completed()
+                on:input=move |e| completed.set(event_target_checked(&e))
+            />
             <div class="variants-container">
                 <For
                     each=variants
                     key=|v| v.id
-                    children=|item_variant| view! { <ItemVariantView item_variant /> }
-                />
+                    let:item_variant
+                >
+                    <ItemVariantView item_variant is_expanded />
+                </For>
+                <AddNewItemVariantView />
             </div>
-            <ItemCount />
+            <ItemCount amount />
+            /*
+            <img
+                src="img/down-chevron-svgrepo-com.svg"
+                title="Expand"
+                class="expand-button cursor-pointer"
+                on:click=toggle_expand
+            />
+            */
         </li>
     }
 }
 
 #[component]
-/*
-pub fn ItemVariantView<Sig, F, G>(item_variant: SubRWSignal<Sig, F, G>) -> impl IntoView
-where
-    Sig: SignalWith<Value = ItemVariant>,
-    F: Fn(&Sig::Value) -> &ItemVariant,
-{
-*/
-//pub fn ItemVariantView(#[prop(into)] item_variant: Signal<ItemVariant>) ->
-// impl IntoView {
-pub fn ItemVariantView(item_variant: ItemVariant) -> impl IntoView {
-    //
-    let ItemVariant { name, img_url, thumb_url, .. } = item_variant;
+pub fn ItemVariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -> impl IntoView {
+    let ItemVariant { name, img_url, thumb_url, brands, quantity, .. } = item_variant;
+
+    let toggle_expand = move |_| is_expanded.update(|b| *b = !*b);
+
     view! {
         <div class="variant">
             <Image thumb_url full_url=img_url/>
-            <span>{ name }</span>
+            <div
+                class="infos"
+                title="Expand"
+                class="name cursor-pointer"
+                on:click=toggle_expand
+            >
+                <span class="name">{ name }</span>
+                <span class="brands">{ brands }</span>
+                <span class="quantity">{ quantity }</span>
+            </div>
         </div>
     }
 }
@@ -84,6 +114,9 @@ where H: Fn() -> bool + 'static {
         subsignal(item, |i| &i.as_ref().unwrap().variants, |i| &mut i.as_mut().unwrap().variants);
     //let variants = subsignals(variants);
 
+    let (completed, set_completed) = create_signal(false);
+    let amount = create_rw_signal(0);
+
     create_effect(move |_| {
         logging::log!("barcode: {:?}", new_item_barcode());
     });
@@ -94,12 +127,14 @@ where H: Fn() -> bool + 'static {
             <div class="variants-container">
                 <For
                     each=variants
-                    key=|v| v.id //v.with(|i| i.id)
-                    children=|item_variant| view! { <NewItemVariantView item_variant /> }
-                />
+                    key=|v| v.id
+                    let:item_variant
+                >
+                    <NewItemVariantView item_variant />
+                </For>
                 <AddNewItemVariantView />
             </div>
-            <ItemCount />
+            <ItemCount amount />
             /*
             <div class="buttons">
                 <img

@@ -14,8 +14,9 @@ pub struct OpenFoodFactsProduct {
     pub brands: String,
     pub quantity: String,
     // product_quantity: Option<String>,
-    pub image_url: Option<String>,
-    pub image_thumb_url: Option<String>,
+    pub image_url: String,
+    pub image_thumb_url: String,
+    pub packaging: String,
     // nutrient_levels: Option<Nutriments>,
     pub nutriments: Nutriments,
 }

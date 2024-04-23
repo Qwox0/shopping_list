@@ -16,6 +16,7 @@ pub struct ItemVariantImpl<ID> {
     pub brands: Option<String>,
     pub img_url: Option<String>,
     pub thumb_url: Option<String>,
+    pub packaging: Option<String>,
     pub quantity: Option<String>,
 }
 
@@ -32,6 +33,7 @@ impl Default for NewItemVariant {
             brands: None,
             img_url: None,
             thumb_url: None,
+            packaging: None,
             quantity: None,
         }
     }
@@ -45,8 +47,8 @@ impl ItemVariant {
     ) -> Result<Vec<Self>> {
         Ok(sqlx::query_as!(
             ItemVariant,
-            "SELECT id, name, shop_id, barcode, brands, img_url, thumb_url, quantity FROM \
-             item_variant WHERE variant_of = ?",
+            "SELECT id, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity \
+             FROM item_variant WHERE variant_of = ?",
             item_id
         )
         .fetch_all(conn)
@@ -59,12 +61,17 @@ impl NewItemVariant {
         OpenFoodFactsProduct::request_with_barcode(barcode).await.map(|data| Self {
             name: data.product_name,
             barcode: OptionBarcode::some(barcode),
-            img_url: data.image_url,
-            thumb_url: data.image_thumb_url,
+            img_url: Some(data.image_url),
+            thumb_url: Some(data.image_thumb_url),
             brands: Some(data.brands),
+            packaging: Some(data.packaging),
             quantity: Some(data.quantity),
             ..Self::default()
         })
+    }
+
+    pub fn with_id(self, id: i64) -> ItemVariant {
+        ItemVariant { id, ..self }
     }
 
     #[cfg(feature = "ssr")]
@@ -74,8 +81,8 @@ impl NewItemVariant {
         conn: impl sqlx::Executor<'_, Database = crate::db::DBType>,
     ) -> Result<ItemVariant> {
         let id = sqlx::query!(
-            r#"INSERT INTO item_variant(variant_of, name, shop_id, barcode, brands, img_url, thumb_url, quantity)
-            VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )"#,
+            r#"INSERT INTO item_variant(variant_of, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity)
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )"#,
             item_id,
             self.name,
             self.shop_id,
@@ -83,11 +90,12 @@ impl NewItemVariant {
             self.brands,
             self.img_url,
             self.thumb_url,
+            self.packaging,
             self.quantity
         )
         .execute(conn)
         .await?
         .last_insert_rowid();
-        Ok(ItemVariant { id, ..self })
+        Ok(self.with_id(id))
     }
 }

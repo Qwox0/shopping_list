@@ -1,6 +1,7 @@
 #![feature(unboxed_closures)]
 #![feature(fn_traits)]
 #![feature(type_changing_struct_update)]
+#![allow(unused)]
 
 pub mod app;
 mod barcode_scanner;
@@ -18,6 +19,7 @@ mod list;
 mod main_page;
 mod option_signal;
 mod popup;
+mod server_sync_signal;
 mod subsignal;
 mod util;
 
