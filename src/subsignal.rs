@@ -298,20 +298,6 @@ where
     SubRWSignal { sig, get_ref, get_mut }
 }
 
-struct SubReadSignal2<T: 'static, F> {
-    sig: Signal<T>,
-    get_ref: F,
-}
-
-pub fn subsignal2<T, U, F, G>(sig: Signal<T>, get_ref: F, get_mut: G) -> ()
-where
-    T: Clone,
-    F: Fn(&T) -> &U,
-    G: Fn(&mut T) -> &mut U,
-{
-    SubReadSignal2 { sig, get_ref };
-}
-
 impl<Sig, F, G, T> SubRWSignal<Sig, F, G>
 where
     Sig: SignalWith,

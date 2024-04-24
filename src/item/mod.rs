@@ -7,16 +7,17 @@ pub mod variant_data;
 use self::{count::ItemCount, data::Item};
 use crate::{
     barcode_scanner::BarcodeScanner,
+    default_resource::DefaultResource,
     image::Image,
     item::{
         data::NewItem,
         server_functions::{set_amount, set_completed},
         variant_data::{ItemVariant, NewItemVariant},
     },
-    option_signal::create_option_signal,
+    option_signal::OptionSignal,
     popup::{Popup, PopupSignal},
     server_sync_signal::ServerSyncSignal,
-    subsignal::subsignal,
+    subsignal::{subsignal, subsignals},
 };
 use leptos::*;
 
@@ -27,7 +28,7 @@ pub fn ItemView(item: Item) -> impl IntoView {
     let completed = ServerSyncSignal::new(completed, move |next| set_completed(id, next));
     let amount = ServerSyncSignal::new(amount, move |next| set_amount(id, next));
 
-    let variants = create_signal(variants).0;
+    let variants = create_rw_signal(variants);
 
     let is_expanded = create_rw_signal(false);
 
@@ -35,12 +36,12 @@ pub fn ItemView(item: Item) -> impl IntoView {
         <li
             class="item"
             expanded=is_expanded
-            checked=move || completed()
+            checked=completed
         >
             <input
                 type="checkbox"
                 class="checkbox"
-                prop:checked=move || completed()
+                prop:checked=completed
                 on:input=move |e| completed.set(event_target_checked(&e))
             />
             <div class="variants-container">
@@ -54,21 +55,14 @@ pub fn ItemView(item: Item) -> impl IntoView {
                 <AddNewItemVariantView />
             </div>
             <ItemCount amount />
-            /*
-            <img
-                src="img/down-chevron-svgrepo-com.svg"
-                title="Expand"
-                class="expand-button cursor-pointer"
-                on:click=toggle_expand
-            />
-            */
         </li>
     }
 }
 
 #[component]
 pub fn ItemVariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -> impl IntoView {
-    let ItemVariant { name, img_url, thumb_url, brands, quantity, .. } = item_variant;
+    let ItemVariant { id, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity } =
+        item_variant;
 
     let toggle_expand = move |_| is_expanded.update(|b| *b = !*b);
 
@@ -93,41 +87,48 @@ pub fn ItemVariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -
 pub fn NewItemView<H>(hidden: H) -> impl IntoView
 where H: Fn() -> bool + 'static {
     let barcode_popup = PopupSignal::new();
-    let (new_item_barcode, set_new_item_barcode) = create_option_signal();
 
-    let item = create_local_resource_with_initial_value(
+    let new_item_barcode = OptionSignal::new();
+    let item = DefaultResource::new_local(
         new_item_barcode,
         move |barcode| async move {
-            if let Some(barcode) = barcode {
-                let a = NewItem::from_barcode(barcode).await;
-                if let Err(e) = a.as_ref() {
-                    logging::error!("ItemData::from_barcode error: {}", e);
-                }
-                a.unwrap_or_default()
-            } else {
-                NewItem { variants: vec![NewItemVariant::default()], ..NewItem::default() }
+            match barcode {
+                Some(barcode) => NewItem::from_barcode(barcode)
+                    .await
+                    .inspect_err(|e| logging::error!("ItemData::from_barcode error: {}", e))
+                    .ok(),
+                None => None,
             }
+            .unwrap_or_else(NewItem::with_default_variant)
         },
-        Some(NewItem::default()),
+        NewItem::with_default_variant,
     );
-    let variants =
-        subsignal(item, |i| &i.as_ref().unwrap().variants, |i| &mut i.as_mut().unwrap().variants);
-    //let variants = subsignals(variants);
 
-    let (completed, set_completed) = create_signal(false);
-    let amount = create_rw_signal(0);
+    create_effect(move |_| {
+        logging::log!("item: {:?}", item());
+    });
+
+    let amount = subsignal(item, |i| &i.amount, |i| &mut i.amount);
+    let completed = subsignal(item, |i| &i.completed, |i| &mut i.completed);
+    let variants = subsignal(item, |i| &i.variants, |i| &mut i.variants);
+    let variants = move || subsignals(variants);
 
     create_effect(move |_| {
         logging::log!("barcode: {:?}", new_item_barcode());
     });
 
     view! {
-        <div class="new-item" hidden=hidden>
-            <input type="checkbox"/>
+        <li class="new-item" expanded hidden=hidden>
+            <input
+                type="checkbox"
+                class="checkbox"
+                prop:checked=move || completed()
+                on:input=move |e| completed.set(event_target_checked(&e))
+            />
             <div class="variants-container">
                 <For
                     each=variants
-                    key=|v| v.id
+                    key=|v| v.with(|i| i.id)
                     let:item_variant
                 >
                     <NewItemVariantView item_variant />
@@ -155,7 +156,7 @@ where H: Fn() -> bool + 'static {
                 } />
             </Popup>
             */
-        </div>
+        </li>
     }
 }
 
@@ -169,11 +170,38 @@ where
 */
 //pub fn NewItemVariantView(#[prop(into)] item_variant: Signal<NewItemVariant>)
 // -> impl IntoView {
-pub fn NewItemVariantView(item_variant: NewItemVariant) -> impl IntoView {
-    let NewItemVariant { name, img_url, thumb_url, .. } = item_variant;
+//pub fn NewItemVariantView(item_variant: NewItemVariant) -> impl IntoView {
+pub fn NewItemVariantView<Sig>(item_variant: Sig) -> impl IntoView
+where Sig: SignalWith<Value = NewItemVariant> + SignalGet<Value = NewItemVariant> {
+    let new_item_barcode = OptionSignal::new();
+    let item = DefaultResource::new_local(
+        new_item_barcode,
+        move |barcode| async move {
+            match barcode {
+                Some(barcode) => NewItemVariant::from_barcode(barcode)
+                    .await
+                    .inspect_err(|e| logging::error!("NewItemVariant::from_barcode error: {}", e))
+                    .ok(),
+                None => None,
+            }
+            .unwrap_or_else(NewItemVariant::default)
+        },
+        NewItemVariant::default,
+    );
+
+    let NewItemVariant {
+        id,
+        name,
+        shop_id, // TODO
+        barcode,
+        brands,
+        img_url,
+        thumb_url,
+        packaging,
+        quantity,
+    } = item_variant.get();
 
     let barcode_popup = PopupSignal::new();
-    let (new_item_barcode, set_new_item_barcode) = create_option_signal();
 
     view! {
         <div class="variant">
@@ -185,18 +213,28 @@ pub fn NewItemVariantView(item_variant: NewItemVariant) -> impl IntoView {
             />
             <Popup popup=barcode_popup>
                 <BarcodeScanner set_barcode=move |res| {
-                    set_new_item_barcode(res.unwrap());
+                    new_item_barcode.set(res.unwrap());
                     barcode_popup.close();
                 } />
             </Popup>
-            <input type="text" class="name-input"
-                placeholder="Name"
-                prop:value=name
-                on:change=move |ev| {
-                    let text = event_target_value(&ev);
-                    //item.update(|i| i.as_mut().do_(|i| i.variants[0].name = text))
-                }
-            />
+            <div
+                class="infos"
+                title="Expand"
+                class="name cursor-pointer"
+                //on:click=toggle_expand
+            >
+                <span class="name">{ &name }</span>
+                <input type="text" class="name"
+                    placeholder="Name"
+                    prop:value=name
+                    on:change=move |ev| {
+                        let text = event_target_value(&ev);
+                        //item.update(|i| i.as_mut().do_(|i| i.variants[0].name = text))
+                    }
+                />
+                <span class="brands">{ brands }</span>
+                <span class="quantity">{ quantity }</span>
+            </div>
         </div>
     }
 }

@@ -1,6 +1,23 @@
-use super::NewItem;
+use super::{data::Item, NewItem};
+use crate::{barcode_scanner::Barcode, list::List};
 use leptos::{logging, server, ServerFnError};
 use serde::{Deserialize, Serialize};
+
+#[server]
+pub async fn get_list() -> Result<List, ServerFnError> {
+    Ok(Item::select_all(&crate::db::MY_DB)
+        .await
+        .inspect_err(|err| eprintln!("ERROR (get_list): {}", err))
+        .map(List)?)
+}
+
+/// Returns id of the created item.
+#[server]
+pub async fn add_item_from_barcode(barcode: Barcode) -> Result<i64, ServerFnError> {
+    let i = NewItem::from_barcode(barcode).await?;
+    let i = i.insert(&crate::db::MY_DB).await?;
+    Ok(i.id)
+}
 
 #[server]
 pub async fn set_completed(item_id: i64, completed: bool) -> Result<(), ServerFnError> {

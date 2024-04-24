@@ -16,6 +16,7 @@ mod image;
 mod item;
 mod language;
 mod list;
+mod default_resource;
 mod main_page;
 mod option_signal;
 mod popup;

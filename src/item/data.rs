@@ -48,6 +48,10 @@ impl Default for NewItem {
 }
 
 impl NewItem {
+    pub fn with_default_variant() -> Self {
+        Self { variants: vec![NewItemVariant::default()], ..Self::default() }
+    }
+
     pub async fn from_barcode(barcode: Barcode) -> Result<Self> {
         Ok(Self { variants: vec![NewItemVariant::from_barcode(barcode).await?], ..Self::default() })
     }

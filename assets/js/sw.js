@@ -1,3 +1,4 @@
+return;
 const cacheName = "shoppingListPWA-v1";
 const cacheFirst = [
     "/",

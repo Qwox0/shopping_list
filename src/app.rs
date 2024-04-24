@@ -1,9 +1,8 @@
 use crate::{
     barcode_scanner::Barcode,
     camera::CameraService,
-    item::{data::NewItem, openfoodsfacts},
+    item::{data::NewItem, openfoodsfacts, server_functions::add_item_from_barcode},
     language::Language,
-    list::add_item_from_barcode,
     main_page::MainPage,
 };
 use leptos::*;
@@ -59,11 +58,10 @@ pub fn App() -> impl IntoView {
         <Meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <Meta name="description" content="Fullstack Rust Shopping List"/>
         <Stylesheet id="leptos" href="/pkg/shopping_list.css"/> // id=leptos means cargo-leptos will hot-reload this stylesheet
-        // <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
         <Link rel="shortcut icon" type_="image/svg+xml" href="/img/favicon.svg"/>
-        // <Link rel="manifest" href="/pwa.webmanifest"/>
+        <Link rel="manifest" href="/pwa.webmanifest"/>
 
-        // <Script type_="text/javascript" src="/js/init_sw.js"/>
+        <Script type_="text/javascript" src="/js/init_sw.js"/>
 
         <Title text="Shopping List"/>
 
@@ -81,7 +79,11 @@ pub fn App() -> impl IntoView {
         <Router fallback=|| view! { <h1>"Not Found"</h1> }.into_view()>
             <main>
                 <Routes>
-                    <Route path="" view=MainPage/>
+                    <Route
+                        path=""
+                        view=MainPage
+                        ssr=SsrMode::Async
+                    />
                     <Route path="/db" view=DBTool/>
                 </Routes>
             </main>

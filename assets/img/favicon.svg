@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="800px" height="800px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none">
+<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none">
     <rect fill="#ff4f4f" width="100%" height="100%" rx="2.5" />
     <svg x="10%" y="15%" width="70%" height="70%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><!-- edited version of <https://www.svgrepo.com/svg/380092/shopping-cart> -->
         <circle cx="10" cy="20" r="1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
