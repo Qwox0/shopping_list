@@ -13,7 +13,10 @@ pub fn Popup(popup: PopupSignal, children: ChildrenFn) -> impl IntoView {
     view! {
         <div
             class="popup-container cursor-pointer"
-            on:click=move |_| popup.close()
+            on:click=move |ev| {
+                ev.stop_propagation();
+                popup.close()
+            }
             hidden=move || !popup.is_open()
         >
             <Show when=move || popup.is_open()>

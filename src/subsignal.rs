@@ -289,14 +289,12 @@ where
     }
 }
 
-pub fn subsignal<Sig, U, F, G>(sig: Sig, get_ref: F, get_mut: G) -> SubRWSignal<Sig, F, G>
-where
-    Sig: SignalWith,
-    F: Fn(&Sig::Value) -> &U,
-    G: Fn(&mut Sig::Value) -> &mut U,
-{
-    SubRWSignal { sig, get_ref, get_mut }
+macro_rules! subsignal {
+    ($sig:expr => $attr:ident) => {
+        $crate::subsignal::SubRWSignal::new($sig, |i| &i.$attr, |i| &mut i.$attr)
+    };
 }
+pub(crate) use subsignal;
 
 impl<Sig, F, G, T> SubRWSignal<Sig, F, G>
 where
@@ -321,13 +319,13 @@ pub fn subsignals<Sig, T>(
 where Sig: SignalWith<Value = Vec<T>> + Copy {
     let len = sig.with(Vec::len);
     (0..len)
-        .map(|idx| subsignal(sig, move |v| &v[idx], move |v| &mut v[idx]))
+        .map(|idx| SubRWSignal::new(sig, move |v| &v[idx], move |v| &mut v[idx]))
         .collect()
 }
 
 #[cfg(test)]
 pub mod test {
-    use crate::subsignal::{subsignal, subsignals};
+    use crate::subsignal::subsignals;
     use leptos::*;
 
     #[derive(Debug, Clone, PartialEq)]
@@ -341,8 +339,8 @@ pub mod test {
         let rt = create_runtime();
         let test_signal = create_rw_signal(Test { a: 0, b: vec![1.0, 2.0, 3.0] });
 
-        let (a, set_a) = subsignal(test_signal, |x| &x.a, |x| &mut x.a).split();
-        let (b, set_b) = subsignal(test_signal, |x| &x.b, |x| &mut x.b).split();
+        let (a, set_a) = subsignal!(test_signal => a).split();
+        let (b, set_b) = subsignal!(test_signal => b).split();
 
         println!("test: {:?}", test_signal.get_untracked());
 

@@ -8,6 +8,7 @@
     top: 0;
     padding: 0.5rem 1rem;
     height: var(--header-bar-height);
+    z-index: 10;
     border: 2px solid white;
 
     * {

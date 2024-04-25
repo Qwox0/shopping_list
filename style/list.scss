@@ -11,8 +11,8 @@ ul#shopping_list {
     padding: 0 max(0.5rem, 10vw - 3rem);
 }
 
-.new-item,
-.item {
+.item,
+.new-item {
     --spacing: 0.5rem;
 
     transition: height 0.5s ease-out;
@@ -33,7 +33,7 @@ ul#shopping_list {
 
     >input[type="checkbox"] {
         --size: 20px;
-        flex: var(--size) 0 0;
+        flex: 0 0 var(--size);
         //min-width: var(--size);
         height: var(--size);
         margin: 0;
@@ -52,97 +52,10 @@ ul#shopping_list {
 
         display: flex;
         gap: var(--spacing);
-
-        .variant,
-        .add-variant {
-            flex: 0 0 100%;
-            overflow: hidden;
-            scroll-snap-align: start;
-
-            border: 2px solid darkgrey;
-
-            &:only-child {
-                border-color: transparent;
-            }
-
-            display: flex;
-        }
-
-        .variant {
-            gap: var(--spacing);
-
-            >img {
-                aspect-ratio: 1 / 1;
-                border-radius: 10%;
-
-                &.image {
-                    object-fit: cover;
-                }
-
-                &.barcode-scanner {
-                    padding: 6px;
-                }
-            }
-
-            >div.infos {
-                flex-grow: 1;
-                line-height: 1.2;
-
-                >span,
-                >input[type="text"] {
-                    display: block;
-                }
-
-                >span.name {
-                    font-weight: bold;
-                }
-
-                >span.brands,
-                >span.quantity {
-                    font-weight: 500;
-                    font-size: 10pt;
-                    color: lightgrey;
-                }
-            }
-        }
-
-        .add-variant {
-            justify-content: center;
-
-            >img {
-                width: 2rem;
-            }
-        }
     }
 
     >.item-count {
         flex: 0 0 2rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-
-        >button {
-            line-height: 1;
-            width: 1rem;
-            padding-left: 0px;
-            padding-right: 0px;
-        }
-
-        >input {
-            width: 100%;
-            text-align: center;
-        }
-
-        >input::-webkit-outer-spin-button,
-        >input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        >input[type=number] {
-            -moz-appearance: textfield;
-            appearance: textfield;
-        }
     }
 
     /*
@@ -175,17 +88,131 @@ ul#shopping_list {
 .new-item {
     background-color: lightgreen;
     color: black;
+}
 
-    /*
-    >div.buttons {
-        flex: none;
+.variant,
+.new-variant,
+.add-variant {
+    flex: 0 0 100%;
+    overflow: hidden;
+    scroll-snap-align: start;
 
-        display: flex;
-        gap: var(--spacing);
+    border: 2px solid darkgrey;
+
+    &:only-child {
+        border-color: transparent;
+    }
+
+    display: flex;
+}
+
+.variant,
+.new-variant {
+    gap: var(--spacing);
+
+    >div.image {
+        --border-radius: 10%;
+        aspect-ratio: 1 / 1;
+        border-radius: var(--border-radius);
 
         >img {
-            width: 2rem;
+            border-radius: var(--border-radius);
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        &.barcode-scanner {
+            padding: 6px;
+
+            >img {
+                filter: drop-shadow(0 0 4px white);
+            }
         }
     }
-    */
+
+    >div.infos {
+        flex-grow: 1;
+        line-height: 1.2;
+
+        >span,
+        >input[type="text"] {
+            display: block;
+            width: 100%;
+        }
+
+        >.name {
+            // font-weight: bold;
+        }
+
+        >.brands,
+        >.quantity {
+            font-weight: 500;
+            color: lightgrey;
+        }
+    }
+}
+
+.variant > div.infos {
+    >.name {
+        font-weight: bold;
+    }
+
+    >.brands,
+    >.quantity {
+        font-size: 10pt;
+    }
+}
+
+.new-variant > div.infos {
+    >input[type="text"] {
+        padding: 0 2px;
+    }
+
+    >.name {
+        font-size: 10pt;
+    }
+
+    >.brands,
+    >.quantity {
+        font-size: 8pt;
+    }
+}
+
+.add-variant {
+    justify-content: center;
+
+    >img {
+        width: 2rem;
+    }
+}
+
+.item-count {
+    flex: 0 0 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    >button {
+        line-height: 1;
+        width: 1rem;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+    >input {
+        width: 100%;
+        text-align: center;
+    }
+
+    >input::-webkit-outer-spin-button,
+    >input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    >input[type=number] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
 }

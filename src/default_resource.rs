@@ -6,29 +6,28 @@ use leptos::{
 use std::future::Future;
 
 #[derive(Debug)]
-pub struct DefaultResource<S: 'static, T: 'static, D> {
+pub struct DefaultResource<S: 'static, T: 'static> {
     res: Resource<S, T>,
-    default: D,
+    default: fn() -> T,
 }
 
-impl<S: 'static, T: 'static, D: Clone> Clone for DefaultResource<S, T, D> {
+impl<S: 'static, T: 'static> Clone for DefaultResource<S, T> {
     fn clone(&self) -> Self {
         Self { res: self.res.clone(), default: self.default.clone() }
     }
 }
 
-impl<S: 'static, T: 'static, D: Copy> Copy for DefaultResource<S, T, D> {}
+impl<S: 'static, T: 'static> Copy for DefaultResource<S, T> {}
 
-impl<S, T, D> DefaultResource<S, T, D>
+impl<S, T> DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     pub fn new_local<Fu: Future<Output = T> + 'static>(
         source: impl Fn() -> S + 'static,
         fetcher: impl Fn(S) -> Fu + 'static,
-        default: D,
+        default: fn() -> T,
     ) -> Self {
         let res = create_local_resource_with_initial_value(source, fetcher, Some(default()));
         DefaultResource { res, default }
@@ -37,7 +36,7 @@ where
     pub fn new_server<Fu: Future<Output = T> + 'static>(
         source: impl Fn() -> S + 'static,
         fetcher: impl Fn(S) -> Fu + 'static,
-        default: D,
+        default: fn() -> T,
     ) -> Self
     where
         T: Serializable,
@@ -47,11 +46,10 @@ where
     }
 }
 
-impl<S, T, D> SignalGet for DefaultResource<S, T, D>
+impl<S, T> SignalGet for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: Clone + 'static,
-    D: Fn() -> T,
 {
     type Value = T;
 
@@ -64,11 +62,10 @@ where
     }
 }
 
-impl<S, T, D> FnOnce<()> for DefaultResource<S, T, D>
+impl<S, T> FnOnce<()> for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: Clone + 'static,
-    D: Fn() -> T,
 {
     type Output = T;
 
@@ -78,11 +75,10 @@ where
     }
 }
 
-impl<S, T, D> FnMut<()> for DefaultResource<S, T, D>
+impl<S, T> FnMut<()> for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: Clone + 'static,
-    D: Fn() -> T,
 {
     #[inline(always)]
     extern "rust-call" fn call_mut(&mut self, _args: ()) -> Self::Output {
@@ -90,11 +86,10 @@ where
     }
 }
 
-impl<S, T, D> Fn<()> for DefaultResource<S, T, D>
+impl<S, T> Fn<()> for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: Clone + 'static,
-    D: Fn() -> T,
 {
     #[inline(always)]
     extern "rust-call" fn call(&self, _args: ()) -> Self::Output {
@@ -102,11 +97,10 @@ where
     }
 }
 
-impl<S, T, D> SignalWith for DefaultResource<S, T, D>
+impl<S, T> SignalWith for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     type Value = T;
 
@@ -122,11 +116,10 @@ where
     }
 }
 
-impl<S, T, D> SignalSet for DefaultResource<S, T, D>
+impl<S, T> SignalSet for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     type Value = T;
 
@@ -139,11 +132,10 @@ where
     }
 }
 
-impl<S, T, D> FnOnce<(T,)> for DefaultResource<S, T, D>
+impl<S, T> FnOnce<(T,)> for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     type Output = ();
 
@@ -153,11 +145,10 @@ where
     }
 }
 
-impl<S, T, D> FnMut<(T,)> for DefaultResource<S, T, D>
+impl<S, T> FnMut<(T,)> for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     #[inline(always)]
     extern "rust-call" fn call_mut(&mut self, args: (T,)) -> Self::Output {
@@ -165,11 +156,10 @@ where
     }
 }
 
-impl<S, T, D> Fn<(T,)> for DefaultResource<S, T, D>
+impl<S, T> Fn<(T,)> for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     #[inline(always)]
     extern "rust-call" fn call(&self, args: (T,)) -> Self::Output {
@@ -177,11 +167,10 @@ where
     }
 }
 
-impl<S, T, D> SignalUpdate for DefaultResource<S, T, D>
+impl<S, T> SignalUpdate for DefaultResource<S, T>
 where
     S: PartialEq + Clone + 'static,
     T: 'static,
-    D: Fn() -> T,
 {
     type Value = T;
 
