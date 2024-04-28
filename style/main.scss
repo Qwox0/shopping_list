@@ -9,4 +9,13 @@ html {
     cursor: pointer;
 }
 
+span.error {
+    color: black;
+    background-color: indianred;
+    border: 2px solid red;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+
+}
+
 @import "header-bar.scss", "list.scss", "popup.scss";

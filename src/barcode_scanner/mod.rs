@@ -1,7 +1,7 @@
 mod barcode;
 mod error;
 
-use crate::camera::CameraService;
+use crate::{camera::CameraService, option_signal::OptionSignal};
 pub use barcode::*;
 pub use error::BarcodeError;
 use leptos::{
@@ -129,86 +129,80 @@ fn scan_for_barcode(
 
 #[component]
 pub fn BarcodeScanner<F>(set_barcode: F) -> impl IntoView
-where F: Fn(Result<Barcode, BarcodeError>) + Copy + 'static {
-    let camera = CameraService::from_context();
-    let video_stream = camera.open();
-    on_cleanup(move || camera.close());
+where F: Fn(Barcode) + Copy + 'static {
+    let barcode_scanner_error = OptionSignal::<RwSignal<Option<BarcodeError>>>::new();
 
-    let video_stream = move || {
-        video_stream
-            .get()
-            .flatten()
-            .transpose()
-            .map_err(|e| set_barcode(Err(e.into())))
-            .unwrap_or_default()
-    };
+    create_effect(move |_| {
+        if let Some(err) = barcode_scanner_error() {
+            logging::error!("ERROR (BarcodeScanner): {:#?}", err);
+        }
+    });
 
     let video = create_node_ref::<Video>();
     let canvas = create_node_ref::<Canvas>();
 
-    let (barcode_count, set_barcode_count) = create_signal(ScanCount::Zero);
-
     #[cfg(feature = "hydrate")]
-    let scan_interval = set_interval_with_handle(
-        move || {
-            let Some(video) = video() else { return };
-            let Some(canvas) = canvas() else { return };
-            match scan_for_barcode(&video, &canvas) {
-                Ok(barcode) => set_barcode_count.update(|c| c.update(barcode)),
-                Err(err) => set_barcode(Err(err)),
-            }
-        },
-        Duration::from_millis(50),
-    );
-    #[cfg(feature = "hydrate")]
-    let scan_interval = match scan_interval {
-        Err(err) => {
-            set_barcode(Err(BarcodeError::SetIntervalErr(err)));
-            None
-        },
-        ok => ok.ok(),
-    };
+    {
+        let camera = CameraService::from_context();
+        let video_stream = camera.open();
+        on_cleanup(move || camera.close());
 
-    #[cfg(feature = "hydrate")]
-    on_cleanup(move || scan_interval.iter().for_each(IntervalHandle::clear));
-
-    const NEEDED_SCAN_COUNT: u8 = 3;
-
-    #[cfg(feature = "hydrate")]
-    create_effect(move |_| match barcode_count() {
-        ScanCount::Count { barcode, count } if count >= NEEDED_SCAN_COUNT => {
-            set_barcode(Ok(barcode));
-        },
-        _ => (),
-    });
-
-    /*
-    let inner_view = move || {
-        let video = view! {
-            <video
-                ref_=video
-                id="camera-video"
-                alt="Please allow camera access"
-                playsinline autoplay muted />
+        let video_stream = move || {
+            video_stream
+                .get()
+                .flatten()
+                .transpose()
+                .map_err(|e| barcode_scanner_error(e.into()))
+                .unwrap_or_default()
         };
-        // logging::log!("video_stream: {:?}", video_stream);
-        #[cfg(feature = "hydrate")]
-        video.set_src_object(video_stream().as_ref());
-        video.into_view()
-    };
-    */
 
-    #[cfg(feature = "hydrate")]
-    create_effect(move |_| match (video(), video_stream()) {
-        (Some(video), Some(stream)) => video.set_src_object(Some(&stream)),
-        (None, Some(_)) => panic!("video_stream before video"),
-        _ => (),
-    });
+        let (barcode_count, set_barcode_count) = create_signal(ScanCount::Zero);
+
+        let scan_interval = set_interval_with_handle(
+            move || {
+                let Some(video) = video() else { return };
+                let Some(canvas) = canvas() else { return };
+                match scan_for_barcode(&video, &canvas) {
+                    Ok(barcode) => set_barcode_count.update(|c| c.update(barcode)),
+                    Err(err) => barcode_scanner_error(err),
+                }
+            },
+            Duration::from_millis(50),
+        );
+
+        let scan_interval = scan_interval
+            .map_err(|err| barcode_scanner_error(BarcodeError::SetIntervalErr(err)))
+            .ok();
+        on_cleanup(move || scan_interval.iter().for_each(IntervalHandle::clear));
+
+        const NEEDED_SCAN_COUNT: u8 = 3;
+        create_effect(move |_| match barcode_count() {
+            ScanCount::Count { barcode, count } if count >= NEEDED_SCAN_COUNT => {
+                set_barcode(barcode);
+            },
+            _ => (),
+        });
+
+        create_effect(move |_| match (video(), video_stream()) {
+            (Some(video), Some(stream)) => video.set_src_object(Some(&stream)),
+            //(None, Some(_)) => panic!("got the video stream before the video element"),
+            _ => (),
+        });
+    }
+
+    let error_text =
+        move || barcode_scanner_error().as_ref().map(ToString::to_string).unwrap_or_default();
+    let error_view = move || view! { <span class="error"> { error_text } </span> };
 
     view! {
-        <Transition fallback=move || view! { <p>"Loading..."</p> }>
-            <video ref_=video id="camera-video" playsinline autoplay muted />
-        </Transition>
-        <canvas ref_=canvas hidden />
+        <Show
+            when=move || barcode_scanner_error.with(Option::is_none)
+            fallback=error_view
+        >
+            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <video ref_=video id="camera-video" playsinline autoplay muted />
+            </Transition>
+            <canvas ref_=canvas hidden />
+        </Show>
     }
 }

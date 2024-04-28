@@ -12,6 +12,8 @@
     padding: 3rem;
 
     display: flex;
+    justify-content: center;
+    align-items: center;
 
     img, video {
         /* HACK: scale up image to ensure that it is bigger than max-width/max-height. */

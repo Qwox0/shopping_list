@@ -192,8 +192,8 @@ pub fn NewItemVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
             >
                 <img src="img/barcode-scan-svgrepo-com.svg" />
                 <Popup popup=barcode_popup>
-                    <BarcodeScanner set_barcode=move |res| {
-                        barcode.set(res.unwrap()); // TODO: remove unwrap
+                    <BarcodeScanner set_barcode=move |b| {
+                        barcode.set(b);
                         barcode_popup.close();
                     } />
                 </Popup>
