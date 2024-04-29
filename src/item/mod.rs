@@ -18,6 +18,7 @@ use crate::{
     popup::{Popup, PopupSignal},
     server_sync_signal::ServerSyncSignal,
     subsignal::{subsignal, subsignals},
+    util::SignalWithMap,
 };
 use leptos::*;
 
@@ -51,16 +52,16 @@ pub fn ItemView(item: Item) -> impl IntoView {
                     key=|v| v.id
                     let:item_variant
                 >
-                    <ItemVariantView item_variant is_expanded />
+                    <VariantView item_variant is_expanded />
                 </For>
                 <For
                     each=new_variants
                     key=|t| t.item_variant.with(|i| i.id)
                     let:item_variant
                 >
-                    <NewItemVariantView item_variant />
+                    <NewVariantView item_variant />
                 </For>
-                <AddNewItemVariantView new_variants/>
+                <AddVariantButtonView new_variants/>
             </div>
             <ItemCount amount />
         </li>
@@ -68,7 +69,7 @@ pub fn ItemView(item: Item) -> impl IntoView {
 }
 
 #[component]
-pub fn ItemVariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -> impl IntoView {
+pub fn VariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -> impl IntoView {
     let ItemVariant { id, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity } =
         item_variant;
 
@@ -107,6 +108,14 @@ impl ItemVariantSignal {
                 match barcode {
                     Some(barcode) => NewItemVariant::from_barcode(barcode)
                         .await
+                        /*
+                        .inspect(|a| window().alert_with_message(&format!("{:?}", a)).unwrap())
+                        .inspect_err(|e| {
+                            window()
+                                .alert_with_message(&format!("ItemData::from_barcode error: {}", e))
+                                .unwrap()
+                        })
+                        */
                         .inspect_err(|e| logging::error!("ItemData::from_barcode error: {}", e))
                         .ok(),
                     None => None,
@@ -155,9 +164,9 @@ where H: Fn() -> bool + 'static {
                     key=|t| t.item_variant.with(|i| i.id)
                     let:item_variant
                 >
-                    <NewItemVariantView item_variant />
+                    <NewVariantView item_variant />
                 </For>
-                <AddNewItemVariantView new_variants />
+                <AddVariantButtonView new_variants />
             </div>
             <ItemCount amount />
         </li>
@@ -165,7 +174,7 @@ where H: Fn() -> bool + 'static {
 }
 
 #[component]
-pub fn NewItemVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
+pub fn NewVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
     let barcode_popup = PopupSignal::new();
 
     let ItemVariantSignal { barcode, item_variant } = item_variant;
@@ -174,23 +183,30 @@ pub fn NewItemVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
     let brands = subsignal!(item_variant => brands);
     let img_url = subsignal!(item_variant => img_url);
     let thumb_url = subsignal!(item_variant => thumb_url);
+    let thumbnail = move || {
+        thumb_url
+            .with_map(|u| format!("url(\"{u}\")"))
+            .unwrap_or_else(|| "unset".to_string())
+    };
     let packaging = subsignal!(item_variant => packaging);
     let quantity = subsignal!(item_variant => quantity);
 
     create_effect(move |_| {
-        println!("{:?}", barcode_popup.is_open());
+        println!("{:?}", item_variant());
     });
 
     view! {
         <div class="new-variant">
             <div
                 class="barcode-scanner image cursor-pointer"
-                on:click=move |_| {
-                    logging::log!("click");
-                    barcode_popup.open()}
-                style:background-image=thumb_url
+                on:click=move |_| barcode_popup.open()
+                style:background-image=thumbnail
             >
-                <img src="img/barcode-scan-svgrepo-com.svg" />
+                <img
+                    src="img/barcode-outline.svg"
+                    alt="Scan Barcode"
+                    title="Scan Barcode"
+                />
                 <Popup popup=barcode_popup>
                     <BarcodeScanner set_barcode=move |b| {
                         barcode.set(b);
@@ -228,7 +244,7 @@ pub fn NewItemVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
 }
 
 #[component]
-pub fn AddNewItemVariantView<Sig>(new_variants: Sig) -> impl IntoView
+pub fn AddVariantButtonView<Sig>(new_variants: Sig) -> impl IntoView
 where Sig: SignalUpdate<Value = Vec<ItemVariantSignal>> + 'static {
     let add_new_variant = move |_| new_variants.update(|v| v.push(ItemVariantSignal::new()));
 
@@ -239,6 +255,7 @@ where Sig: SignalUpdate<Value = Vec<ItemVariantSignal>> + 'static {
         >
             <img
                 src="img/plus-svgrepo-com.svg"
+                alt="Add new Item Variant"
                 title="Add new Item Variant"
                 class="new-variant-button cursor-pointer"
             />

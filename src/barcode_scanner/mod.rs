@@ -11,7 +11,7 @@ use leptos::{
 };
 use rxing::{
     common::HybridBinarizer, oned::MultiFormatUPCEANReader, BinaryBitmap, DecodingHintDictionary,
-    Luma8LuminanceSource, Reader,
+    Luma8LuminanceSource, RXingResult, Reader,
 };
 use rxing_wasm::BarcodeResult;
 use std::{fmt::Debug, time::Duration};
@@ -28,6 +28,8 @@ pub fn get_2d_context(
         .dyn_into()
         .map_err(|_| BarcodeError::JsDynCastError)
 }
+
+const NEEDED_SCAN_COUNT: u8 = 3;
 
 #[derive(Debug, Clone, Copy)]
 enum ScanCount {
@@ -46,6 +48,17 @@ impl ScanCount {
             },
             (_, Some(barcode)) => ScanCount::Count { barcode, count: 1 },
         }
+    }
+
+    fn get_barcode(&self) -> Option<&Barcode> {
+        match self {
+            ScanCount::Zero => None,
+            ScanCount::Count { barcode, .. } => Some(barcode),
+        }
+    }
+
+    fn set_manually(&mut self, barcode: Barcode) {
+        *self = ScanCount::Count { barcode, count: NEEDED_SCAN_COUNT }
     }
 }
 
@@ -131,6 +144,7 @@ fn scan_for_barcode(
 pub fn BarcodeScanner<F>(set_barcode: F) -> impl IntoView
 where F: Fn(Barcode) + Copy + 'static {
     let barcode_scanner_error = OptionSignal::<RwSignal<Option<BarcodeError>>>::new();
+    let barcode_count = create_rw_signal(ScanCount::Zero);
 
     create_effect(move |_| {
         if let Some(err) = barcode_scanner_error() {
@@ -156,14 +170,12 @@ where F: Fn(Barcode) + Copy + 'static {
                 .unwrap_or_default()
         };
 
-        let (barcode_count, set_barcode_count) = create_signal(ScanCount::Zero);
-
         let scan_interval = set_interval_with_handle(
             move || {
                 let Some(video) = video() else { return };
                 let Some(canvas) = canvas() else { return };
                 match scan_for_barcode(&video, &canvas) {
-                    Ok(barcode) => set_barcode_count.update(|c| c.update(barcode)),
+                    Ok(barcode) => barcode_count.update(|c| c.update(barcode)),
                     Err(err) => barcode_scanner_error(err),
                 }
             },
@@ -175,7 +187,6 @@ where F: Fn(Barcode) + Copy + 'static {
             .ok();
         on_cleanup(move || scan_interval.iter().for_each(IntervalHandle::clear));
 
-        const NEEDED_SCAN_COUNT: u8 = 3;
         create_effect(move |_| match barcode_count() {
             ScanCount::Count { barcode, count } if count >= NEEDED_SCAN_COUNT => {
                 set_barcode(barcode);
@@ -194,15 +205,39 @@ where F: Fn(Barcode) + Copy + 'static {
         move || barcode_scanner_error().as_ref().map(ToString::to_string).unwrap_or_default();
     let error_view = move || view! { <span class="error"> { error_text } </span> };
 
+    let barcode_value = move || {
+        barcode_count
+            //.with(ScanCount::get_barcode)
+            .with(|a| a.get_barcode().map(ToString::to_string))
+            .unwrap_or_default()
+    };
+
+    let manually_set_barcode = move |ev| match Barcode::try_from(event_target_value(&ev)) {
+        Ok(barcode) => barcode_count.update(|b| b.set_manually(barcode)),
+        Err(err) => barcode_scanner_error.set(BarcodeError::ParseBarcodeErr(err)),
+    };
+
     view! {
-        <Show
-            when=move || barcode_scanner_error.with(Option::is_none)
-            fallback=error_view
+        <div
+            class="barcode-scanner"
+            on:click=|ev| ev.stop_propagation()
         >
-            <Transition fallback=move || view! { <p>"Loading..."</p> }>
-                <video ref_=video id="camera-video" playsinline autoplay muted />
-            </Transition>
-            <canvas ref_=canvas hidden />
-        </Show>
+            <Show
+                when=move || barcode_scanner_error.with(Option::is_none)
+                fallback=error_view
+            >
+                <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                    <video ref_=video playsinline autoplay muted />
+                </Transition>
+                <canvas ref_=canvas hidden />
+            </Show>
+            <input
+                type="text"
+                class="barcode-input"
+                placeholder="Barcode"
+                //prop:value=barcode_value
+                on:change=manually_set_barcode
+            />
+        </div>
     }
 }

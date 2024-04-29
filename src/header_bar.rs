@@ -27,6 +27,7 @@ pub fn HeaderBar() -> impl IntoView {
             <div class="header-bar--right">
                 <img
                     src="img/check-svgrepo-com.svg"
+                    alt="Save Item"
                     title="Save Item"
                     class="save-item-button cursor-pointer"
                     class:new-item-active=new_item_active
@@ -34,6 +35,7 @@ pub fn HeaderBar() -> impl IntoView {
                 />
                 <img
                     src="img/plus-large-svgrepo-com.svg"
+                    alt=tooltip
                     title=tooltip
                     class="new-item-button cursor-pointer"
                     class:new-item-active=new_item_active

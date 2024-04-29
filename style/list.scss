@@ -13,16 +13,19 @@ ul#shopping_list {
 
 .item,
 .new-item {
+    --item-height-small: 5rem;
+    --item-height-expanded: 10rem;
+    --item-border: 2px;
     --spacing: 0.5rem;
 
     transition: height 0.5s ease-out;
-    height: 5rem;
+    height: var(--item-height-small);
 
     &[expanded] {
-        height: 10rem;
+        height: var(--item-height-expanded);
     }
 
-    border: 2px solid #ddd;
+    border: var(--item-border) solid #ddd;
     padding: var(--spacing);
     border-radius: 4px;
     margin-top: 0.2rem;
@@ -93,11 +96,13 @@ ul#shopping_list {
 .variant,
 .new-variant,
 .add-variant {
+    --variant-border: var(--item-border);
+
     flex: 0 0 100%;
     overflow: hidden;
     scroll-snap-align: start;
 
-    border: 2px solid darkgrey;
+    border: var(--variant-border) solid darkgrey;
 
     &:only-child {
         border-color: transparent;
@@ -112,6 +117,8 @@ ul#shopping_list {
 
     >div.image {
         --border-radius: 10%;
+        /* this height value must equal the height of the collapsed variant content */
+        height: calc(var(--item-height-small) - 2 * var(--item-border) - 2 * var(--spacing) - 2 * var(--variant-border));
         aspect-ratio: 1 / 1;
         border-radius: var(--border-radius);
 
@@ -124,6 +131,8 @@ ul#shopping_list {
 
         &.barcode-scanner {
             padding: 6px;
+            background-size: cover;
+            background-position: center;
 
             >img {
                 filter: drop-shadow(0 0 4px white);
@@ -142,7 +151,7 @@ ul#shopping_list {
         }
 
         >.name {
-            // font-weight: bold;
+            font-weight: bold;
         }
 
         >.brands,
@@ -153,18 +162,14 @@ ul#shopping_list {
     }
 }
 
-.variant > div.infos {
-    >.name {
-        font-weight: bold;
-    }
-
+.variant>div.infos {
     >.brands,
     >.quantity {
         font-size: 10pt;
     }
 }
 
-.new-variant > div.infos {
+.new-variant>div.infos {
     >input[type="text"] {
         padding: 0 2px;
     }

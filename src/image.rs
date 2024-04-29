@@ -11,6 +11,8 @@ pub fn Image(
         view! {
             <img
                 src=thumb_url
+                alt="Item image"
+                title="Full image"
                 class="image cursor-pointer"
                 on:click=move |_| popup.open()
             />
@@ -21,7 +23,7 @@ pub fn Image(
         .into_view()
     } else {
         view! {
-            <img src=thumb_url class="image" />
+            <img src=thumb_url alt="Item image" class="image" />
         }
         .into_view()
     }

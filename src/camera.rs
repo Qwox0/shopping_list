@@ -84,7 +84,7 @@ pub enum CameraError {
     #[error("couldn't get media device: {:?}", .0)]
     NoMediaDevices(JsValue),
 
-    #[error("error with getting user media: {:?}", .0)]
+    #[error("error while getting user media: {:?}", .0)]
     GetUserMediaErr(JsValue),
 
     #[error("get_user_media promise was rejected: {:?}", .0)]

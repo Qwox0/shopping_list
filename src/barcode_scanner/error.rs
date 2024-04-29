@@ -30,7 +30,7 @@ pub enum BarcodeError {
     #[error("unsupported barcode type: {}", .0)]
     UnsupportedBarcodeType(String),
 
-    #[error("cann't parse barcode: {}", .0)]
+    #[error("can't parse barcode: {}", .0)]
     ParseBarcodeErr(ParseIntError),
 
     #[error("invalid barcode length (expected: {expected}, got: {got})")]

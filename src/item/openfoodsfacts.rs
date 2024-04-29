@@ -93,7 +93,7 @@ pub struct NutrientLevels {
 #[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct OpenFoodFactsResponse {
     code: String,
-    product: serde_json::Value,
+    product: Option<serde_json::Value>,
     status: u8,
     status_verbose: String,
 }
@@ -106,10 +106,10 @@ impl Display for OpenFoodFactsResponse {
             .field("code", &format_args!("{}", self.code))
             .field("status", &self.status)
             .field("status_verbose", &self.status);
-        if is_alternate {
-            f.field("product", &format_args!("{:#}", self.product))
-        } else {
-            f.field("product", &format_args!("{}", self.product))
+        match &self.product {
+            Some(product) if is_alternate => f.field("product", &format_args!("{:#}", product)),
+            Some(product) => f.field("product", &format_args!("{}", product)),
+            None => f,
         }
         .finish()
     }
@@ -117,15 +117,15 @@ impl Display for OpenFoodFactsResponse {
 
 /// this functions returns an [`OpenFoodFactsResponse`]. If you want to parse
 /// the response use [`OpenFoodFactsProduct::request_with_barcode`].
-pub async fn request_with_barcode(barcode: Barcode) -> Result<OpenFoodFactsResponse> {
+pub async fn request_with_barcode(barcode: Barcode) -> Result<serde_json::Value> {
     const OK_STATUS: u8 = 1;
 
     let url =
-        format!("https://world.openfoodfacts.org/api/v0/product/{}.json", barcode.get_digits());
+        format!("https://world.openfoodfacts.org/api/v0/product/{}.json", barcode);
     let res = reqwest::get(url).await?.json::<OpenFoodFactsResponse>().await?;
 
-    match res.status {
-        OK_STATUS => Ok(res),
+    match res {
+        OpenFoodFactsResponse { product: Some(p), status: OK_STATUS, .. } => Ok(p),
         _ => {
             logging::error!("Error with OpenFoodFacts: {}", res.status_verbose);
             Err(Error::DidntFindProduct)
@@ -135,6 +135,6 @@ pub async fn request_with_barcode(barcode: Barcode) -> Result<OpenFoodFactsRespo
 
 impl OpenFoodFactsProduct {
     pub async fn request_with_barcode(barcode: Barcode) -> Result<Self> {
-        serde_json::from_value(request_with_barcode(barcode).await?.product).map_err(Into::into)
+        serde_json::from_value(request_with_barcode(barcode).await?).map_err(Into::into)
     }
 }

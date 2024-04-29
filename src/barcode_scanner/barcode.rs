@@ -1,7 +1,10 @@
 use super::BarcodeError;
 use crate::util::DecLen;
 use serde::{Deserialize, Serialize};
-use std::num::{NonZeroI64, ParseIntError};
+use std::{
+    fmt,
+    num::{NonZeroI64, ParseIntError},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Barcode {
@@ -55,7 +58,7 @@ impl Barcode {
         Ok(Barcode { digits })
     }
 
-    pub fn get_digits(self) -> i64 {
+    pub fn get_digits(&self) -> i64 {
         self.digits.get()
     }
 
@@ -87,6 +90,12 @@ impl From<i64> for Barcode {
     /// Panics if the `digits` aren't a valid Barcode
     fn from(digits: i64) -> Self {
         Barcode::from(digits as u64)
+    }
+}
+
+impl fmt::Display for Barcode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.get_digits())
     }
 }
 

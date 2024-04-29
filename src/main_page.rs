@@ -11,11 +11,5 @@ pub fn MainPage() -> impl IntoView {
         <section id="list-sec">
             <ListView />
         </section>
-
-        <img src="img/barcode-scan-svgrepo-com.svg" />
-        <img src="img/barcode-scan-svgrepo-com.svg" />
-        <img src="img/barcode-scan-svgrepo-com.svg" />
-        <img src="img/barcode-scan-svgrepo-com.svg" />
-        <img src="img/barcode-scan-svgrepo-com.svg" />
     }
 }
