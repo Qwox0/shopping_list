@@ -1,5 +1,9 @@
-use super::{data::Item, NewItem};
-use crate::{barcode_scanner::Barcode, list::List};
+use super::data::Item;
+use crate::{
+    barcode_scanner::Barcode,
+    item::data::{ItemImpl, NewItem},
+    list::List,
+};
 use leptos::{logging, server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +21,11 @@ pub async fn add_item_from_barcode(barcode: Barcode) -> Result<i64, ServerFnErro
     let i = NewItem::from_barcode(barcode).await?;
     let i = i.insert(&crate::db::MY_DB).await?;
     Ok(i.id)
+}
+
+#[server]
+pub async fn remove_item(id: i64) -> Result<bool, ServerFnError> {
+    Item::remove(id, &crate::db::MY_DB).await.map_err(Into::into)
 }
 
 #[server]
@@ -48,6 +57,7 @@ pub struct ItemIds {
 
 #[server]
 pub async fn insert_from_client(new_item: NewItem) -> Result<ItemIds, ServerFnError> {
+    logging::log!("{:?}", new_item);
     let item = new_item.insert(&crate::db::MY_DB).await?;
     Ok(ItemIds { item_id: item.id, variant_ids: item.variants.into_iter().map(|a| a.id).collect() })
 }

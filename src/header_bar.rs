@@ -25,6 +25,7 @@ pub fn HeaderBar() -> impl IntoView {
                 <h2>"Shopping List"</h2>
             </div>
             <div class="header-bar--right">
+                /*
                 <img
                     src="img/check-svgrepo-com.svg"
                     alt="Save Item"
@@ -33,6 +34,7 @@ pub fn HeaderBar() -> impl IntoView {
                     class:new-item-active=new_item_active
                     on:click=move |_| { let _ = window().alert_with_message("save"); }
                 />
+                */
                 <img
                     src="img/plus-large-svgrepo-com.svg"
                     alt=tooltip

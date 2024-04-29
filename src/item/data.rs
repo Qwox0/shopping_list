@@ -37,6 +37,23 @@ impl Item {
         }
         Ok(items)
     }
+
+    /// Returns whether rows where affected or not
+    pub async fn remove(id: i64, db: &DB) -> Result<bool> {
+        let mut tx = db.begin_transaction().await?;
+        let affected = sqlx::query!("DELETE FROM item WHERE id = ?", id)
+            .execute(tx.as_mut())
+            .await?
+            .rows_affected()
+            > 0;
+
+        sqlx::query!("DELETE FROM item_variant WHERE variant_of = ?", id)
+            .execute(tx.as_mut())
+            .await?;
+
+        tx.commit().await?;
+        Ok(affected)
+    }
 }
 
 pub type NewItem = ItemImpl<()>;

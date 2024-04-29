@@ -11,7 +11,7 @@ use crate::{
     image::Image,
     item::{
         data::NewItem,
-        server_functions::{set_amount, set_completed},
+        server_functions::{set_amount, set_completed, InsertFromClient, RemoveItem},
         variant_data::{ItemVariant, NewItemVariant},
     },
     option_signal::OptionSignal,
@@ -33,6 +33,12 @@ pub fn ItemView(item: Item) -> impl IntoView {
     let new_variants = create_rw_signal(Vec::<ItemVariantSignal>::new());
 
     let is_expanded = create_rw_signal(false);
+
+    let remove_item = create_server_action::<RemoveItem>();
+    let remove = move |_| match window().confirm_with_message("Remove Item?") {
+        Ok(ok) if ok => remove_item.dispatch(RemoveItem { id }),
+        _ => (),
+    };
 
     view! {
         <li
@@ -63,19 +69,34 @@ pub fn ItemView(item: Item) -> impl IntoView {
                 </For>
                 <AddVariantButtonView new_variants/>
             </div>
-            <ItemCount amount />
+            <div class="rhs">
+                <ItemCount amount />
+                <img
+                    src="img/trash-alt-svgrepo-com.svg"
+                    alt="Remove Item"
+                    title="Remove Item"
+                    class="remove-item-button cursor-pointer"
+                    on:click=remove
+                />
+            </div>
         </li>
     }
 }
 
 #[component]
 pub fn VariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -> impl IntoView {
-    let ItemVariant { id, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity } =
+    let ItemVariant { id, name, shop, barcode, brands, img_url, thumb_url, packaging, quantity } =
         item_variant;
 
     let toggle_expand = move |_| is_expanded.update(|b| *b = !*b);
 
     view! {
+        /*
+        <details open=is_expanded>
+            <summary>
+            </summary>
+        </details>
+        */
         <div class="variant">
             <div class="image">
                 <Image thumb_url full_url=img_url/>
@@ -147,8 +168,11 @@ where H: Fn() -> bool + 'static {
     };
 
     create_effect(move |_| {
-        logging::log!("item: {:?}", item());
+        logging::log!("debug item: {:?}", item());
     });
+
+    let insert_from_client = create_server_action::<InsertFromClient>();
+    let add_item = move |_| insert_from_client.dispatch(InsertFromClient { new_item: item() });
 
     view! {
         <li class="new-item" expanded hidden=hidden>
@@ -168,7 +192,16 @@ where H: Fn() -> bool + 'static {
                 </For>
                 <AddVariantButtonView new_variants />
             </div>
-            <ItemCount amount />
+            <div class="rhs">
+                <ItemCount amount />
+                <img
+                    src="img/check-svgrepo-com.svg"
+                    alt="Save Item"
+                    title="Save Item"
+                    class="save-item-button cursor-pointer"
+                    on:click=add_item
+                />
+            </div>
         </li>
     }
 }
@@ -179,7 +212,7 @@ pub fn NewVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
 
     let ItemVariantSignal { barcode, item_variant } = item_variant;
     let name = subsignal!(item_variant => name);
-    let shop_id = subsignal!(item_variant => shop_id);
+    let shop = subsignal!(item_variant => shop);
     let brands = subsignal!(item_variant => brands);
     let img_url = subsignal!(item_variant => img_url);
     let thumb_url = subsignal!(item_variant => thumb_url);
@@ -229,14 +262,14 @@ pub fn NewVariantView(item_variant: ItemVariantSignal) -> impl IntoView {
                 <input type="text"
                     class="brands"
                     placeholder="Brands"
-                    prop:value=move || brands().unwrap_or_default()
-                    on:change=move |ev| brands.set(Some(event_target_value(&ev)))
+                    prop:value=move || brands()
+                    on:change=move |ev| brands.set(event_target_value(&ev))
                 />
                 <input type="text"
                     class="quantity"
                     placeholder="Quantity"
-                    prop:value=move || quantity().unwrap_or_default()
-                    on:change=move |ev| quantity.set(Some(event_target_value(&ev)))
+                    prop:value=move || quantity()
+                    on:change=move |ev| quantity.set(event_target_value(&ev))
                 />
             </div>
         </div>

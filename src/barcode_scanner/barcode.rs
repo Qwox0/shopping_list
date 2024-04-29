@@ -121,6 +121,7 @@ impl TryFrom<rxing_wasm::BarcodeResult> for Barcode {
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
 pub struct OptionBarcode(pub Option<Barcode>);
 
 impl OptionBarcode {

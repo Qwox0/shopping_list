@@ -11,13 +11,14 @@ pub struct ItemVariantImpl<ID> {
     pub id: ID,
     pub name: String,
 
-    pub shop_id: Option<i64>, // TODO
+    //pub shop_id: Option<i64>,
+    pub shop: String,
     pub barcode: OptionBarcode,
-    pub brands: Option<String>,
+    pub brands: String,
     pub img_url: Option<String>,
     pub thumb_url: Option<String>,
-    pub packaging: Option<String>,
-    pub quantity: Option<String>,
+    pub packaging: String,
+    pub quantity: String,
 }
 
 pub type ItemVariant = ItemVariantImpl<i64>;
@@ -28,13 +29,14 @@ impl Default for NewItemVariant {
         Self {
             id: (),
             name: "".to_string(),
-            shop_id: None,
+            //shop_id: None,
+            shop: "".to_string(),
             barcode: OptionBarcode::none(),
-            brands: None,
+            brands: "".to_string(),
             img_url: None,
             thumb_url: None,
-            packaging: None,
-            quantity: None,
+            packaging: "".to_string(),
+            quantity: "".to_string(),
         }
     }
 }
@@ -47,8 +49,8 @@ impl ItemVariant {
     ) -> Result<Vec<Self>> {
         Ok(sqlx::query_as!(
             ItemVariant,
-            "SELECT id, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity \
-             FROM item_variant WHERE variant_of = ?",
+            "SELECT id, name, shop, barcode, brands, img_url, thumb_url, packaging, quantity FROM \
+             item_variant WHERE variant_of = ?",
             item_id
         )
         .fetch_all(conn)
@@ -63,9 +65,9 @@ impl NewItemVariant {
             barcode: OptionBarcode::some(barcode),
             img_url: Some(data.image_url),
             thumb_url: Some(data.image_thumb_url),
-            brands: Some(data.brands),
-            packaging: Some(data.packaging),
-            quantity: Some(data.quantity),
+            brands: data.brands,
+            packaging: data.packaging,
+            quantity: data.quantity,
             ..Self::default()
         })
     }
@@ -81,11 +83,11 @@ impl NewItemVariant {
         conn: impl sqlx::Executor<'_, Database = crate::db::DBType>,
     ) -> Result<ItemVariant> {
         let id = sqlx::query!(
-            r#"INSERT INTO item_variant(variant_of, name, shop_id, barcode, brands, img_url, thumb_url, packaging, quantity)
+            r#"INSERT INTO item_variant(variant_of, name, shop, barcode, brands, img_url, thumb_url, packaging, quantity)
             VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )"#,
             item_id,
             self.name,
-            self.shop_id,
+            self.shop,
             self.barcode,
             self.brands,
             self.img_url,
