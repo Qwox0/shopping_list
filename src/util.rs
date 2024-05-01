@@ -1,4 +1,4 @@
-use leptos::SignalWith;
+use leptos::{SignalUpdate, SignalWith};
 
 pub trait DecLen {
     fn dec_len(&self) -> u8;
@@ -92,3 +92,11 @@ pub trait SignalWithMap<T>: SignalWith<Value = Option<T>> {
 }
 
 impl<Sig: SignalWith<Value = Option<T>>, T> SignalWithMap<T> for Sig {}
+
+pub trait SignalUpdateSome<T>: SignalUpdate<Value = Option<T>> {
+    fn update_some(&self, f: impl FnOnce(&mut T)) {
+        self.update(|o| o.as_mut().do_(f))
+    }
+}
+
+impl<Sig: SignalUpdate<Value = Option<T>>, T> SignalUpdateSome<T> for Sig {}

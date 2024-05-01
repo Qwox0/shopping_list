@@ -14,11 +14,12 @@ use crate::{
         server_functions::{set_amount, set_completed, InsertFromClient, RemoveItem},
         variant_data::{ItemVariant, NewItemVariant},
     },
+    list::{InsertFromClientAction, ListResource},
     option_signal::OptionSignal,
     popup::{Popup, PopupSignal},
     server_sync_signal::ServerSyncSignal,
     subsignal::{subsignal, subsignals},
-    util::SignalWithMap,
+    util::{force_use_context, SignalUpdateSome, SignalWithMap},
 };
 use leptos::*;
 
@@ -34,9 +35,13 @@ pub fn ItemView(item: Item) -> impl IntoView {
 
     let is_expanded = create_rw_signal(false);
 
+    let list = force_use_context::<ListResource>();
     let remove_item = create_server_action::<RemoveItem>();
     let remove = move |_| match window().confirm_with_message("Remove Item?") {
-        Ok(ok) if ok => remove_item.dispatch(RemoveItem { id }),
+        Ok(ok) if ok => {
+            remove_item.dispatch(RemoveItem { id });
+            list.0.update_some(|l| l.local_remove_id(id));
+        },
         _ => (),
     };
 
@@ -171,8 +176,8 @@ where H: Fn() -> bool + 'static {
         logging::log!("debug item: {:?}", item());
     });
 
-    let insert_from_client = create_server_action::<InsertFromClient>();
-    let add_item = move |_| insert_from_client.dispatch(InsertFromClient { new_item: item() });
+    let insert_from_client = force_use_context::<InsertFromClientAction>();
+    let add_item = move |_| insert_from_client.0.dispatch(InsertFromClient { new_item: item() });
 
     view! {
         <li class="new-item" expanded hidden=hidden>
