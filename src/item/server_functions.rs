@@ -4,7 +4,7 @@ use crate::{
     item::data::{ItemImpl, NewItem},
     list::List,
 };
-use leptos::{logging, server, ServerFnError};
+use leptos::{logging, server, Action, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 #[server]
@@ -61,3 +61,6 @@ pub async fn insert_from_client(new_item: NewItem) -> Result<ItemIds, ServerFnEr
     let item = new_item.insert(&crate::db::MY_DB).await?;
     Ok(ItemIds { item_id: item.id, variant_ids: item.variants.into_iter().map(|a| a.id).collect() })
 }
+
+#[derive(Clone, Copy)]
+pub struct InsertFromClientAction(pub Action<InsertFromClient, Result<ItemIds, ServerFnError>>);

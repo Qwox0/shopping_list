@@ -14,7 +14,10 @@ pub fn Image(
                 alt="Item image"
                 title="Full image"
                 class="image cursor-pointer"
-                on:click=move |_| popup.open()
+                on:click=move |ev| {
+                    ev.stop_propagation();
+                    popup.open();
+                }
             />
             <Popup popup>
                 <img src=&full_url />

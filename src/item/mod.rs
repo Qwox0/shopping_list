@@ -11,10 +11,12 @@ use crate::{
     image::Image,
     item::{
         data::NewItem,
-        server_functions::{set_amount, set_completed, InsertFromClient, RemoveItem},
+        server_functions::{
+            set_amount, set_completed, InsertFromClient, InsertFromClientAction, RemoveItem,
+        },
         variant_data::{ItemVariant, NewItemVariant},
     },
-    list::{InsertFromClientAction, ListResource},
+    list::ListResource,
     option_signal::OptionSignal,
     popup::{Popup, PopupSignal},
     server_sync_signal::ServerSyncSignal,
@@ -102,15 +104,15 @@ pub fn VariantView(item_variant: ItemVariant, is_expanded: RwSignal<bool>) -> im
             </summary>
         </details>
         */
-        <div class="variant">
+        <div
+            title="Expand"
+            class="variant cursor-pointer"
+            on:click=toggle_expand
+        >
             <div class="image">
                 <Image thumb_url full_url=img_url/>
             </div>
-            <div
-                title="Expand"
-                class="infos cursor-pointer"
-                on:click=toggle_expand
-            >
+            <div class="infos">
                 <span class="name">{ name }</span>
                 <span class="brands">{ brands }</span>
                 <span class="quantity">{ quantity }</span>

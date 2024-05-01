@@ -2,7 +2,7 @@ use crate::{
     barcode_scanner::Barcode,
     item::{
         data::{Item, NewItem},
-        server_functions::{get_list, InsertFromClient, ItemIds},
+        server_functions::{get_list, InsertFromClient, InsertFromClientAction, ItemIds},
         ItemView, NewItemView, ShowNewItem,
     },
     util::force_use_context,
@@ -45,9 +45,6 @@ impl List {
 #[derive(Debug, Clone, Copy)]
 pub struct ListResource(pub Resource<(), List>);
 
-#[derive(Clone, Copy)]
-pub struct InsertFromClientAction(pub Action<InsertFromClient, Result<ItemIds, ServerFnError>>);
-
 #[component]
 pub fn ListView() -> impl IntoView {
     let show_new_item = force_use_context::<ShowNewItem>();
@@ -55,7 +52,9 @@ pub fn ListView() -> impl IntoView {
     let insert_from_client = InsertFromClientAction(create_server_action::<InsertFromClient>());
     provide_context(insert_from_client);
 
-    let list = List::new_resource(move || insert_from_client.0.version().track());
+    let list = List::new_resource(move || {
+        insert_from_client.0.version().get();
+    });
     provide_context(list);
 
     let items_view = move || list.0().map(List::into_view);
