@@ -49,6 +49,7 @@ rxing-wasm = { git = "https://github.com/rxing-core/rxing-wasm", version = "0.2.
 ] }
 rxing = "*"
 lazy_static = "1.4.0"
+bcrypt = "0.15.1"
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]

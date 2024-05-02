@@ -1,8 +1,10 @@
 use crate::{
     barcode_scanner::Barcode,
     camera::CameraService,
+    db_tool::DBTool,
     item::{data::NewItem, openfoodsfacts, server_functions::add_item_from_barcode},
     language::Language,
+    login::Login,
     main_page::MainPage,
 };
 use leptos::*;
@@ -84,54 +86,10 @@ pub fn App() -> impl IntoView {
                         view=MainPage
                         ssr=SsrMode::Async
                     />
+                    <Route path="/login" view=Login/>
                     <Route path="/db" view=DBTool/>
                 </Routes>
             </main>
         </Router>
-    }
-}
-
-#[server]
-pub async fn db_action(barcode: String, action: String) -> Result<String, ServerFnError> {
-    let barcode = Barcode::try_from(barcode)?;
-
-    match action.as_str() {
-        "request json" => Ok(format!("{:#}", openfoodsfacts::request_with_barcode(barcode).await?)),
-        "request OpenFoodFactsProduct" => Ok(format!(
-            "{:#?}",
-            openfoodsfacts::OpenFoodFactsProduct::request_with_barcode(barcode).await?
-        )),
-        "request ItemData" => Ok(format!("{:#?}", NewItem::from_barcode(barcode).await?)),
-        "Add Item" => add_item_from_barcode(barcode).await.map(|_| format!("Added Item")),
-        _ => Err(ServerFnError::new(format!("invalid action: {:?}", action))),
-    }
-}
-
-#[component]
-pub fn DBTool() -> impl IntoView {
-    let action = create_server_action::<DbAction>();
-    let output = action.value();
-    let text = move || match output().transpose() {
-        Ok(s) => s.unwrap_or_default(),
-        Err(err) => format!("ERROR: {err}"),
-    };
-
-    view! {
-        <h1>"DB Tool"</h1>
-        <ActionForm action=action>
-            <label for="barcode-input">"barcode: "</label>
-            <input type="text" id="barcode-input" name="barcode"/>
-            <br/>
-            <input type="submit" name="action" value="request json"/>
-            <input type="submit" name="action" value="request OpenFoodFactsProduct"/>
-            <input type="submit" name="action" value="request ItemData"/>
-            <input type="submit" name="action" value="Add Item"/>
-        </ActionForm>
-        <br/>
-        <textarea
-            prop:value=text
-            onmouseover="this.style.height = this.scrollHeight + 10 + \"px\""
-            style:width="100%"
-        />
     }
 }

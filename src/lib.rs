@@ -4,10 +4,14 @@
 #![allow(unused)]
 
 pub mod app;
+#[cfg(feature = "ssr")]
+mod auth;
 mod barcode_scanner;
 mod camera;
 #[cfg(feature = "ssr")]
 mod db;
+mod db_tool;
+mod default_resource;
 mod error;
 #[cfg(feature = "ssr")]
 pub mod fileserv;
@@ -16,7 +20,7 @@ mod image;
 mod item;
 mod language;
 mod list;
-mod default_resource;
+mod login;
 mod main_page;
 mod option_signal;
 mod popup;
