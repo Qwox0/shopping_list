@@ -44,6 +44,10 @@ where
         let res = create_resource_with_initial_value(source, fetcher, Some(default()));
         DefaultResource { res, default }
     }
+
+    pub fn reset(&self) {
+        self.res.set((self.default)())
+    }
 }
 
 impl<S, T> SignalGet for DefaultResource<S, T>

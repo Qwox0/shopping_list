@@ -1,10 +1,10 @@
-use super::data::Item;
+use super::{data::Item, variant_data::NewVariant};
 use crate::{
     barcode_scanner::Barcode,
     item::data::{ItemImpl, NewItem},
     list::List,
 };
-use leptos::{logging, server, Action, ServerFnError};
+use leptos::{logging, server, Action, MultiAction, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 #[server]
@@ -57,10 +57,23 @@ pub struct ItemIds {
 
 #[server]
 pub async fn insert_from_client(new_item: NewItem) -> Result<ItemIds, ServerFnError> {
-    logging::log!("{:?}", new_item);
     let item = new_item.insert(&crate::db::MY_DB).await?;
+    // std::thread::sleep(std::time::Duration::from_millis(10000));
     Ok(ItemIds { item_id: item.id, variant_ids: item.variants.into_iter().map(|a| a.id).collect() })
 }
 
 #[derive(Clone, Copy)]
-pub struct InsertFromClientAction(pub Action<InsertFromClient, Result<ItemIds, ServerFnError>>);
+pub struct InsertFromClientAction(
+    pub MultiAction<InsertFromClient, Result<ItemIds, ServerFnError>>,
+);
+
+/// returns the variant id.
+#[server]
+pub async fn insert_variant_from_client(
+    item_id: i64,
+    new_variant: NewVariant,
+) -> Result<i64, ServerFnError> {
+    let mut conn = crate::db::MY_DB.connection().await?;
+    let variant = new_variant.insert(item_id, conn.as_mut()).await?;
+    Ok(variant.id)
+}

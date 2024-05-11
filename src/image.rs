@@ -26,7 +26,7 @@ pub fn Image(
         .into_view()
     } else {
         view! {
-            <img src=thumb_url alt="Item image" class="image" />
+            <img src=thumb_url /*alt="Item image"*/ class="image" />
         }
         .into_view()
     }

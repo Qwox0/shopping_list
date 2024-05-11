@@ -11,28 +11,24 @@ ul#shopping_list {
     padding: 0 max(0.5rem, 10vw - 3rem);
 }
 
-.item,
-.new-item {
+.item {
     --item-height-small: 5rem;
     --item-height-expanded: 10rem;
     --item-border: 2px;
     --variant-border: var(--item-border);
-    --item-content-height-small: calc(var(--item-height-small) - 2 * var(--item-border) - 2 * var(--spacing));
-    --item-content-height-expanded: calc(var(--item-height-expanded) - 2 * var(--item-border) - 2 * var(--spacing));
+    --variant-height-small: calc(var(--item-height-small) - 2 * var(--item-border) - 2 * var(--spacing));
+    --variant-height-expanded: calc(var(--item-height-expanded) - 2 * var(--item-border) - 2 * var(--spacing));
+    --variant-info-height: calc(var(--variant-height-expanded) - 2 * var(--variant-border));
     --spacing: 0.5rem;
 
-
     transition: height 0.5s ease-out;
-    //height: min-content;
     height: var(--item-height-small);
-
-    >.variants-container {
-    }
 
     &[expanded] {
         height: var(--item-height-expanded);
     }
 
+    background-color: grey;
     border: var(--item-border) solid #ddd;
     padding: var(--spacing);
     border-radius: 4px;
@@ -51,6 +47,7 @@ ul#shopping_list {
     >.variants-container {
         flex: 1 1 0px;
 
+        position: relative; /* needed for offsetLeft */
         overflow-x: scroll;
         scroll-snap-type: x mandatory;
 
@@ -65,14 +62,14 @@ ul#shopping_list {
     >.rhs {
         flex: 0 0 2rem;
         align-self: flex-start;
-        height: calc(var(--item-content-height-expanded));
+        height: calc(var(--variant-height-expanded));
 
         display: flex;
         flex-direction: column;
         justify-content: space-between;
 
         >.item-count {
-            height: calc(var(--item-content-height-small));
+            height: calc(var(--variant-height-small));
             overflow: hidden;
         }
     }
@@ -96,44 +93,48 @@ ul#shopping_list {
     */
 }
 
-.item {
-    background-color: grey;
+.new {
+    background-color: lightgreen;
+}
+
+.item.new {
+    color: black;
+}
+
+.item.pending {
+    filter: brightness(0.75);
 }
 
 .item[checked] .variant {
     text-decoration: line-through;
 }
 
-.new-item {
-    background-color: lightgreen;
-    color: black;
-}
-
 .variant,
-.new-variant,
 .add-variant {
     flex: 0 0 100%;
     height: 100%;
+    //height: var(--variant-height-expanded);
     overflow: hidden;
     scroll-snap-align: start;
 
     border: var(--variant-border) solid darkgrey;
 
+    /*
     &:only-child {
         border-color: transparent;
     }
+    */
 
     display: flex;
 }
 
-.variant,
-.new-variant {
+.variant {
     gap: var(--spacing);
 
     >div.image {
         --border-radius: 10%;
         /* this height value must equal the height of the collapsed variant content */
-        height: calc(var(--item-content-height-small) - 2 * var(--variant-border));
+        height: calc(var(--variant-height-small) - 2 * var(--variant-border));
         aspect-ratio: 1 / 1;
         border-radius: var(--border-radius);
 
@@ -159,6 +160,10 @@ ul#shopping_list {
         flex-grow: 1;
         line-height: 1.2;
         height: 100%;
+        height: var(--variant-info-height);
+
+        display: flex;
+        flex-direction: column;
 
         >span,
         >input[type="text"] {
@@ -175,29 +180,40 @@ ul#shopping_list {
             font-weight: 500;
             color: lightgrey;
         }
+
+        >.buttons {
+            margin-top: auto;
+            display: flex;
+            justify-content: flex-end;
+
+            img {
+                height: 28px;
+            }
+        }
     }
 }
 
 .variant>div.infos {
-
     >.brands,
     >.quantity {
         font-size: 10pt;
     }
 }
 
-.new-variant>div.infos {
-    >input[type="text"] {
-        padding: 0 2px;
-    }
+.variant.new {
+    >div.infos {
+        >input[type="text"] {
+            padding: 0 2px;
+        }
 
-    >.name {
-        font-size: 10pt;
-    }
+        >.name {
+            font-size: 10pt;
+        }
 
-    >.brands,
-    >.quantity {
-        font-size: 8pt;
+        >.brands,
+        >.quantity {
+            font-size: 8pt;
+        }
     }
 }
 

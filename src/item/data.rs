@@ -1,11 +1,11 @@
 use super::{
     server_functions::insert_from_client,
-    variant_data::{ItemVariant, ItemVariantImpl, NewItemVariant},
+    variant_data::{Variant, VariantImpl, NewVariant},
 };
 use crate::{barcode_scanner::Barcode, error::Result};
 #[cfg(feature = "ssr")]
 use crate::{db::DBType, db::DB};
-use leptos::{create_server_action, ServerFnErrorErr};
+use leptos::{create_server_action, logging, ServerFnErrorErr};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -13,7 +13,7 @@ pub struct ItemImpl<ID> {
     pub id: ID,
     pub amount: u64,
     pub completed: bool,
-    pub variants: Vec<ItemVariantImpl<ID>>,
+    pub variants: Vec<VariantImpl<ID>>,
 }
 
 pub type Item = ItemImpl<i64>;
@@ -66,15 +66,16 @@ impl Default for NewItem {
 
 impl NewItem {
     pub fn with_default_variant() -> Self {
-        Self { variants: vec![NewItemVariant::default()], ..Self::default() }
+        Self { variants: vec![NewVariant::default()], ..Self::default() }
     }
 
     pub async fn from_barcode(barcode: Barcode) -> Result<Self> {
-        Ok(Self { variants: vec![NewItemVariant::from_barcode(barcode).await?], ..Self::default() })
+        Ok(Self { variants: vec![NewVariant::from_barcode(barcode).await?], ..Self::default() })
     }
 
     #[cfg(feature = "ssr")]
     pub async fn insert(self, db: &DB) -> Result<Item> {
+        logging::log!("insert item: {:?}", self);
         let mut tx = db.begin_transaction().await?;
 
         let amount = self.amount as i64;
@@ -112,6 +113,14 @@ impl NewItem {
     }
 }
 
+pub struct PendingItem(pub NewItem);
+
+impl From<NewItem> for PendingItem {
+    fn from(value: NewItem) -> Self {
+        PendingItem(value)
+    }
+}
+
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct ItemRow {
     pub id: i64,
@@ -135,7 +144,7 @@ impl ItemRow {
         conn: impl sqlx::Executor<'_, Database = DBType>,
     ) -> Result<Item> {
         let Self { id, amount, completed } = self;
-        let variants = ItemVariant::for_item(id, conn).await?;
+        let variants = Variant::for_item(id, conn).await?;
         Ok(Item { id, amount: saturating_as(amount), completed, variants })
     }
 }

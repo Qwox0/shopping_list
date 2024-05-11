@@ -7,7 +7,7 @@ where S: SignalUpdate<Value = u64> + SignalGet<Value = u64> + Copy + 'static {
     let dec = move |_| amount.update(|x| *x = x.saturating_sub(1));
     view! {
         <div class="item-count">
-            <button on:click=inc>"+"</button>
+            <button class="cursor-pointer" on:click=inc>"+"</button>
             <input
                 type="number"
                 min="0"
@@ -17,7 +17,22 @@ where S: SignalUpdate<Value = u64> + SignalGet<Value = u64> + Copy + 'static {
                     |c| *c = event_target_value(&ev).parse().unwrap_or(*c)
                 )
             />
-            <button on:click=dec>"-"</button>
+            <button class="cursor-pointer" on:click=dec>"-"</button>
+        </div>
+    }
+}
+
+#[component]
+pub fn ItemCountDisabled(amount: u64) -> impl IntoView {
+    view! {
+        <div class="item-count">
+            <button disabled>"+"</button>
+            <input
+                type="number"
+                value=amount
+                disabled
+            />
+            <button disabled>"-"</button>
         </div>
     }
 }

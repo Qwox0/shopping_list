@@ -1,4 +1,7 @@
-use leptos::{SignalUpdate, SignalWith};
+use leptos::{
+    create_effect, html::ElementDescriptor, svg::g, HtmlElement, NodeRef, SignalUpdate, SignalWith,
+};
+use std::cell::RefCell;
 
 pub trait DecLen {
     fn dec_len(&self) -> u8;
@@ -100,3 +103,17 @@ pub trait SignalUpdateSome<T>: SignalUpdate<Value = Option<T>> {
 }
 
 impl<Sig: SignalUpdate<Value = Option<T>>, T> SignalUpdateSome<T> for Sig {}
+
+/// runs `f` when the `element` is rendered
+pub fn on_render_elem<T>(element: NodeRef<T>, f: impl Fn(&HtmlElement<T>) + 'static)
+where T: ElementDescriptor + Clone {
+    element.on_load(move |el| {
+        create_effect(move |_| f(&el));
+    });
+}
+
+/// runs `f` when the component is rendered
+pub fn on_render(f: impl FnOnce() + 'static) {
+    let mut f = RefCell::new(Some(f));
+    create_effect(move |_| f.take().do_(|f| f()));
+}

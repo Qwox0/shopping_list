@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct ItemVariantImpl<ID> {
+pub struct VariantImpl<ID> {
     pub id: ID,
     pub name: String,
 
@@ -21,10 +21,28 @@ pub struct ItemVariantImpl<ID> {
     pub quantity: String,
 }
 
-pub type ItemVariant = ItemVariantImpl<i64>;
-pub type NewItemVariant = ItemVariantImpl<()>;
+pub type Variant = VariantImpl<i64>;
 
-impl Default for NewItemVariant {
+impl Variant {
+    #[cfg(feature = "ssr")]
+    pub async fn for_item(
+        item_id: i64,
+        conn: impl sqlx::Executor<'_, Database = crate::db::DBType>,
+    ) -> Result<Vec<Self>> {
+        Ok(sqlx::query_as!(
+            Variant,
+            "SELECT id, name, shop, barcode, brands, img_url, thumb_url, packaging, quantity FROM \
+             item_variant WHERE variant_of = ?",
+            item_id
+        )
+        .fetch_all(conn)
+        .await?)
+    }
+}
+
+pub type NewVariant = VariantImpl<()>;
+
+impl Default for NewVariant {
     fn default() -> Self {
         Self {
             id: (),
@@ -41,24 +59,7 @@ impl Default for NewItemVariant {
     }
 }
 
-impl ItemVariant {
-    #[cfg(feature = "ssr")]
-    pub async fn for_item(
-        item_id: i64,
-        conn: impl sqlx::Executor<'_, Database = crate::db::DBType>,
-    ) -> Result<Vec<Self>> {
-        Ok(sqlx::query_as!(
-            ItemVariant,
-            "SELECT id, name, shop, barcode, brands, img_url, thumb_url, packaging, quantity FROM \
-             item_variant WHERE variant_of = ?",
-            item_id
-        )
-        .fetch_all(conn)
-        .await?)
-    }
-}
-
-impl NewItemVariant {
+impl NewVariant {
     pub async fn from_barcode(barcode: Barcode) -> Result<Self> {
         OpenFoodFactsProduct::request_with_barcode(barcode).await.map(|data| Self {
             name: data.product_name,
@@ -72,8 +73,8 @@ impl NewItemVariant {
         })
     }
 
-    pub fn with_id(self, id: i64) -> ItemVariant {
-        ItemVariant { id, ..self }
+    pub fn with_id(self, id: i64) -> Variant {
+        Variant { id, ..self }
     }
 
     #[cfg(feature = "ssr")]
@@ -81,7 +82,7 @@ impl NewItemVariant {
         self,
         item_id: i64,
         conn: impl sqlx::Executor<'_, Database = crate::db::DBType>,
-    ) -> Result<ItemVariant> {
+    ) -> Result<Variant> {
         let id = sqlx::query!(
             r#"INSERT INTO item_variant(variant_of, name, shop, barcode, brands, img_url, thumb_url, packaging, quantity)
             VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )"#,
@@ -99,5 +100,13 @@ impl NewItemVariant {
         .await?
         .last_insert_rowid();
         Ok(self.with_id(id))
+    }
+}
+
+pub struct PendingVariant(pub NewVariant);
+
+impl From<NewVariant> for PendingVariant {
+    fn from(value: NewVariant) -> Self {
+        PendingVariant(value)
     }
 }

@@ -4,7 +4,7 @@ use crate::{
     db_tool::DBTool,
     item::{data::NewItem, openfoodsfacts, server_functions::add_item_from_barcode},
     language::Language,
-    login::Login,
+    login::LoginView,
     main_page::MainPage,
 };
 use leptos::*;
@@ -86,7 +86,7 @@ pub fn App() -> impl IntoView {
                         view=MainPage
                         ssr=SsrMode::Async
                     />
-                    <Route path="/login" view=Login/>
+                    <Route path="/login" view=LoginView/>
                     <Route path="/db" view=DBTool/>
                 </Routes>
             </main>
