@@ -1,10 +1,14 @@
-use crate::{item::ShowNewItem, util::force_use_context};
+use crate::{
+    item::{RefreshList, ShowNewItem},
+    util::force_use_context,
+};
 use leptos::*;
 use web_sys::{ScrollBehavior, ScrollToOptions};
 
 #[component]
 pub fn HeaderBar() -> impl IntoView {
     let show_new_item = force_use_context::<ShowNewItem>();
+    let refresh_list = force_use_context::<RefreshList>().0;
     let new_item_active = move || show_new_item.0.get();
 
     let toggle_new_item = move |_| {
@@ -20,7 +24,15 @@ pub fn HeaderBar() -> impl IntoView {
 
     view! {
         <header id="header-bar">
-            <div></div>
+            <div class="header-bar--left">
+                <img
+                    src="img/refresh-cw-svgrepo-com.svg"
+                    alt="Refresh"
+                    title="Refresh"
+                    class="refresh-button cursor-pointer"
+                    on:click=move |_| refresh_list.notify()
+                />
+            </div>
             <div class="header-bar--center">
                 <h2>"Shopping List"</h2>
             </div>

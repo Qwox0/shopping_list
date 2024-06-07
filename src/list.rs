@@ -3,7 +3,7 @@ use crate::{
     item::{
         data::{Item, NewItem, PendingItem},
         server_functions::{get_list, InsertFromClient, InsertFromClientAction, ItemIds},
-        ItemView, NewItemView, ShowNewItem,
+        ItemView, NewItemView, RefreshList, ShowNewItem,
     },
     util::force_use_context,
 };
@@ -50,12 +50,19 @@ impl ListResource {
 #[component]
 pub fn ListView() -> impl IntoView {
     let show_new_item = force_use_context::<ShowNewItem>().0;
+    let refresh_list = force_use_context::<RefreshList>().0;
 
     let insert_from_client = create_server_multi_action::<InsertFromClient>();
     provide_context(InsertFromClientAction(insert_from_client));
 
     let items = ListResource::new(move || insert_from_client.version().get());
     provide_context(items);
+
+    create_effect(move |_| {
+        refresh_list.track();
+        logging::log!("Manual refresh");
+        items.0.refetch();
+    });
 
     let submissions = insert_from_client.submissions();
     let pending_items = move || {

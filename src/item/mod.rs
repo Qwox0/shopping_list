@@ -537,3 +537,6 @@ impl ShowNewItem {
         self.0.update(|b| *b = !*b);
     }
 }
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct RefreshList(pub Trigger);
