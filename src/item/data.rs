@@ -1,6 +1,6 @@
 use super::{
     server_functions::insert_from_client,
-    variant_data::{Variant, VariantImpl, NewVariant},
+    variant_data::{NewVariant, Variant, VariantImpl},
 };
 use crate::{barcode_scanner::Barcode, error::Result};
 #[cfg(feature = "ssr")]

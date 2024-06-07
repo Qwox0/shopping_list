@@ -60,7 +60,7 @@ pub fn ItemView(item: Item) -> impl IntoView {
     let remove = move |_| match window().confirm_with_message("Remove Item?") {
         Ok(ok) if ok => {
             remove_item.dispatch(RemoveItem { id });
-            list.0.update_some(|l| l.local_remove_id(id)); // FIXME: this produces a warning
+            list.0.update_some(|l| l.local_remove_id(id)); // FIXME: this produces a console.warn
         },
         _ => (),
     };
@@ -75,6 +75,7 @@ pub fn ItemView(item: Item) -> impl IntoView {
             class="item"
             expanded=is_expanded
             checked=completed
+            archived=move || amount() == 0
         >
             <input
                 type="checkbox"
@@ -137,8 +138,13 @@ pub fn VariantView(variant: Variant) -> impl IntoView {
             </div>
             <div class="infos">
                 <span class="name">{ name }</span>
-                <span class="brands">{ brands }</span>
-                <span class="quantity">{ quantity }</span>
+                <span class="quantity sub-info">{ quantity }</span>
+                <span class="brands sub-info">{ brands }</span>
+                // <span class="sub-info">{ format!("{}{}{}",
+                //     quantity,
+                //     if quantity.len() > 0 { ", " } else { "" },
+                //     brands)
+                // }</span>
                 <div class="buttons">
                     <img
                         src="img/pen-square-svgrepo-com.svg"
@@ -395,14 +401,14 @@ pub fn NewVariantView(
                     on:change=move |ev| name.set(event_target_value(&ev))
                 />
                 <input type="text"
-                    class="brands"
+                    class="brands sub-info"
                     placeholder="Brands"
                     title="Brands"
                     prop:value=move || brands()
                     on:change=move |ev| brands.set(event_target_value(&ev))
                 />
                 <input type="text"
-                    class="quantity"
+                    class="quantity sub-info"
                     placeholder="Quantity"
                     title="Quantity"
                     prop:value=move || quantity()

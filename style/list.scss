@@ -12,10 +12,13 @@ ul#shopping_list {
 }
 
 .item {
-    --item-height-small: 5rem;
+    --item-height-small: 4rem;
     --item-height-expanded: 10rem;
     --item-border: 2px;
-    --variant-border: var(--item-border);
+    --item-border-radius: 4px;
+    --item-bg: grey;
+    --item-bg: #555555;
+    --variant-border: 1px;
     --variant-height-small: calc(var(--item-height-small) - 2 * var(--item-border) - 2 * var(--spacing));
     --variant-height-expanded: calc(var(--item-height-expanded) - 2 * var(--item-border) - 2 * var(--spacing));
     --variant-info-height: calc(var(--variant-height-expanded) - 2 * var(--variant-border));
@@ -28,12 +31,17 @@ ul#shopping_list {
         height: var(--item-height-expanded);
     }
 
-    background-color: grey;
+    background-color: var(--item-bg);
     border: var(--item-border) solid #ddd;
     padding: var(--spacing);
-    border-radius: 4px;
+    border-radius: var(--item-border-radius);
     margin-top: 0.2rem;
     overflow: hidden;
+
+    // &[archived] { // the popup doesn't work
+    &[archived] div.image>img {
+        filter: grayscale(1);
+    }
 
     display: flex;
     align-items: stretch;
@@ -47,8 +55,8 @@ ul#shopping_list {
     >.variants-container {
         flex: 1 1 0px;
 
-        position: relative; /* needed for offsetLeft */
-        overflow-x: scroll;
+        position: relative;
+        overflow-x: scroll; // needed for offsetLeft
         scroll-snap-type: x mandatory;
 
         scrollbar-width: none;
@@ -118,6 +126,7 @@ ul#shopping_list {
     scroll-snap-align: start;
 
     border: var(--variant-border) solid darkgrey;
+    border-radius: var(--item-border-radius);
 
     /*
     &:only-child {
@@ -159,44 +168,59 @@ ul#shopping_list {
     >div.infos {
         flex-grow: 1;
         line-height: 1.2;
-        height: 100%;
+        //height: 100%;
         height: var(--variant-info-height);
 
         display: flex;
-        flex-direction: column;
+
+        // flex-direction: column;
+
+        flex-wrap: wrap;
+        align-items: baseline;
+        align-content: flex-start;
+
+        >*:nth-child(3) {
+            flex-basis: 100%;
+        }
 
         >span,
         >input[type="text"] {
             display: block;
-            width: 100%;
+            //width: 100%;
         }
 
         >.name {
+            font-size: 13pt;
             font-weight: bold;
+            margin-right: 0.5rem;
         }
 
-        >.brands,
-        >.quantity {
+        >.sub-info {
+            font-size: 10pt;
             font-weight: 500;
-            color: lightgrey;
+            /* darkgrey is lighter than grey */
+            color: darkgrey;
         }
+
+        position: relative; // needed for absolute positioning of >.buttons
 
         >.buttons {
+            // align-self: flex-end;
+            // justify-self: stretch;
             margin-top: auto;
             display: flex;
             justify-content: flex-end;
+
+            position: absolute;
+            // bottom: var(--variant-border);
+            // right: var(--variant-border);
+            bottom: 0px;
+            right: 0px;
 
             img {
                 height: 28px;
             }
         }
-    }
-}
-
-.variant>div.infos {
-    >.brands,
-    >.quantity {
-        font-size: 10pt;
     }
 }
 
@@ -210,8 +234,7 @@ ul#shopping_list {
             font-size: 10pt;
         }
 
-        >.brands,
-        >.quantity {
+        >.sub-info {
             font-size: 8pt;
         }
     }
@@ -227,8 +250,9 @@ ul#shopping_list {
 
 .item-count {
     display: flex;
-    flex-direction: column;
+    //flex-direction: column;
     align-items: center;
+    flex-wrap: wrap;
 
     >button {
         line-height: 1;

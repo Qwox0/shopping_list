@@ -3,7 +3,7 @@
 
     display: flex;
     align-items: center;
-    background-color: grey;
+    background-color: #555555;
     position: sticky;
     top: 0;
     padding: 0.5rem 1rem;
@@ -34,8 +34,16 @@
         }
     }
 
+    >.header-bar--left,
     >.header-bar--right {
         display: flex;
+
+        >img {
+            filter: invert(1);
+        }
+    }
+
+    >.header-bar--right {
         justify-content: end;
 
         >* {
@@ -44,10 +52,6 @@
 
         :last-child {
             margin-right: 0rem;
-        }
-
-        >img {
-            filter: invert(1);
         }
 
         >img.new-item-button {
