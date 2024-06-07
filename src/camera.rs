@@ -16,7 +16,8 @@ async fn get_camera_stream() -> Result<MediaStream, CameraError> {
     window()
         .navigator()
         .media_devices()
-        .map_err(CameraError::NoMediaDevices)?
+        .map_err(CameraError::GetMediaDevicesError)
+        .and_then(|m| if m.is_undefined() { Err(CameraError::NoMediaDevices) } else { Ok(m) })?
         .get_user_media_with_constraints(
             MediaStreamConstraints::new().audio(&JsValue::FALSE).video(&video),
         )
@@ -81,8 +82,11 @@ impl CameraService {
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum CameraError {
-    #[error("couldn't get media device: {:?}", .0)]
-    NoMediaDevices(JsValue),
+    #[error("can't access camera")]
+    NoMediaDevices,
+
+    #[error("error while getting get media devices: {:?}", .0)]
+    GetMediaDevicesError(JsValue),
 
     #[error("error while getting user media: {:?}", .0)]
     GetUserMediaErr(JsValue),

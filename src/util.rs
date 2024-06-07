@@ -1,7 +1,7 @@
 use leptos::{
     create_effect, html::ElementDescriptor, svg::g, HtmlElement, NodeRef, SignalUpdate, SignalWith,
 };
-use std::cell::RefCell;
+use std::{cell::RefCell, cmp::Ordering};
 
 pub trait DecLen {
     fn dec_len(&self) -> u8;
@@ -116,4 +116,33 @@ where T: ElementDescriptor + Clone {
 pub fn on_render(f: impl FnOnce() + 'static) {
     let mut f = RefCell::new(Some(f));
     create_effect(move |_| f.take().do_(|f| f()));
+}
+
+pub trait VecExt<T> {
+    fn sorted(self) -> Self
+    where T: Ord;
+
+    fn sorted_by(self, f: impl FnMut(&T, &T) -> Ordering) -> Self;
+
+    fn sorted_by_key<K>(self, f: impl FnMut(&T) -> K) -> Self
+    where K: Ord;
+}
+
+impl<T> VecExt<T> for Vec<T> {
+    fn sorted(mut self) -> Self
+    where T: Ord {
+        self.sort();
+        self
+    }
+
+    fn sorted_by(mut self, compare: impl FnMut(&T, &T) -> Ordering) -> Self {
+        self.sort_by(compare);
+        self
+    }
+
+    fn sorted_by_key<K>(mut self, f: impl FnMut(&T) -> K) -> Self
+    where K: Ord {
+        self.sort_by_key(f);
+        self
+    }
 }

@@ -5,7 +5,7 @@ use crate::{
         server_functions::{get_list, InsertFromClient, InsertFromClientAction, ItemIds},
         ItemView, NewItemView, RefreshList, ShowNewItem,
     },
-    util::force_use_context,
+    util::{force_use_context, VecExt},
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,14 @@ pub struct List(pub(crate) Vec<Item>);
 
 impl IntoView for List {
     fn into_view(self) -> View {
+        self.0
+            .sorted_by(|a, b| a.amount.cmp(&b.amount).reverse())
+            .into_iter()
+            .map(|item| {
+                view! { <ItemView item/> }
+            })
+            .collect_view()
+        /*
         view! {
             <For
                 each=move || self.0.clone()
@@ -23,6 +31,7 @@ impl IntoView for List {
                 children=|item| view! { <ItemView item/> }
             />
         }
+        */
     }
 }
 
