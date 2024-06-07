@@ -5,6 +5,7 @@ async fn main() {
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use shopping_list::{app::*, fileserv::file_and_error_handler};
+    use tower_http::compression::CompressionLayer;
 
     // Setting get_configuration(None) means we'll be using cargo-leptos's env
     // values For deployment these variables are:
@@ -19,6 +20,7 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
+        .layer(CompressionLayer::new())
         .leptos_routes(&leptos_options, routes, App)
         .fallback(file_and_error_handler)
         .with_state(leptos_options);
